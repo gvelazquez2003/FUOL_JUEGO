@@ -192,6 +192,16 @@ const HIGHLIGHTS = {
       option("Golpear de puno", "defending", 12, "save", "Limpias el area de un manotazo."),
       option("Asegurar abajo", "composure", 14, "save", "Amarras el rebote antes del remate."),
     ]),
+    scenario("Tiro libre con pantalla", "Ves tarde la pelota entre la barrera y los cuerpos.", [
+      option("Paso y estirada", "reflexes", 15, "save", "Llegas con la mano baja al disparo."),
+      option("Mandar la barrera", "composure", 12, "organize", "Ordenas el muro y tapas la linea."),
+      option("Blocaje firme", "reflexes", 16, "save", "No dejas rebote en el area chica."),
+    ]),
+    scenario("Salida bajo presion", "El rival salta a tu central y te pide jugar con los pies.", [
+      option("Pase al lateral", "passing", 11, "buildUp", "Sales corto sin regalar la pelota."),
+      option("Envio al nueve", "passing", 15, "keyPass", "Tu golpeo rompe la presion."),
+      option("Templar la jugada", "composure", 12, "organize", "Esperas el movimiento correcto."),
+    ]),
   ],
   def: [
     scenario("Carrera al espacio", "Un punta te ataca la espalda.", [
@@ -203,6 +213,21 @@ const HIGHLIGHTS = {
       option("Despeje fuerte", "defending", 11, "tackle", "Alejas el peligro del area."),
       option("Cabecear al punta", "passing", 14, "keyPass", "La segunda jugada sale con ventaja."),
       option("Seguir marca", "composure", 13, "tackle", "No compras el bloqueo rival."),
+    ]),
+    scenario("Linea alta", "El rival busca la espalda de la defensa con un pase temprano.", [
+      option("Tirar fuera de juego", "composure", 14, "organize", "Coordinas la linea y anulas la carrera."),
+      option("Barrer la recepcion", "defending", 13, "tackle", "Cortas el control antes del giro."),
+      option("Ganar la carrera", "pace", 15, "clearance", "Llegas primero y mandas lejos."),
+    ]),
+    scenario("Corner a favor", "Subes al area y el centro cae a tu altura.", [
+      option("Atacar segundo palo", "shooting", 17, "goal", "Tu cabezazo entra pegado al palo."),
+      option("Peinar al centro", "passing", 14, "assist", "Dejas la pelota servida al rematador."),
+      option("Cazar rechace", "composure", 13, "keyPass", "Mantienes vivo el ataque."),
+    ]),
+    scenario("Bloque bajo", "Tu equipo resiste una posesion larga alrededor del area.", [
+      option("Tapar remate", "defending", 12, "block", "Pones el cuerpo en la trayectoria."),
+      option("Despeje lateral", "composure", 11, "clearance", "Sacas peligro sin rifar el rebote."),
+      option("Salir conduciendo", "dribbling", 16, "buildUp", "Rompes la primera presion."),
     ]),
   ],
   mid: [
@@ -216,6 +241,16 @@ const HIGHLIGHTS = {
       option("Cambio de frente", "composure", 14, "assist", "La banda opuesta recibe con metros."),
       option("Robo tras perdida", "defending", 14, "tackle", "Reaccionas antes de la contra."),
     ]),
+    scenario("Ritmo de cierre", "Faltan minutos y el partido se parte por el centro.", [
+      option("Pausar con pase", "composure", 11, "control", "Bajas el pulso del partido."),
+      option("Lanzar transicion", "passing", 14, "keyPass", "Encuentras la carrera del extremo."),
+      option("Falta tactica limpia", "defending", 15, "tackle", "Cortas la salida sin perder la cabeza."),
+    ]),
+    scenario("Llegada de segunda linea", "El area se abre cuando tu delantero fija a los centrales.", [
+      option("Picar al punto penal", "shooting", 16, "goal", "Llegas desde atras para marcar."),
+      option("Pase al tercer hombre", "passing", 13, "assist", "Desarmas la marca con vision."),
+      option("Reciclar posesion", "composure", 10, "control", "Tu equipo vuelve a mandar."),
+    ]),
   ],
   wing: [
     scenario("Uno contra uno", "La banda queda abierta frente al lateral.", [
@@ -228,6 +263,16 @@ const HIGHLIGHTS = {
       option("Diagonal al arco", "shooting", 16, "goal", "Atacas el hueco con ventaja."),
       option("Freno y pase", "composure", 13, "keyPass", "El ataque respira y conserva ventaja."),
     ]),
+    scenario("Doble marca", "El lateral recibe ayuda y te cierran el regate.", [
+      option("Pisar y descargar", "passing", 11, "buildUp", "Sales de la trampa con apoyo."),
+      option("Tunel al espacio", "dribbling", 16, "keyPass", "Dejas una ventaja dentro del area."),
+      option("Forzar corner", "pace", 12, "corner", "Ganas linea y una pelota parada."),
+    ]),
+    scenario("Repliegue largo", "El rival contraataca por tu banda.", [
+      option("Volver al sprint", "stamina", 13, "tackle", "Recuperas metros y tapas el centro."),
+      option("Cerrar linea de pase", "defending", 14, "block", "Tu repliegue apaga la contra."),
+      option("Robar y acelerar", "dribbling", 15, "keyPass", "Giras defensa en ataque."),
+    ]),
   ],
   st: [
     scenario("Pase al hueco", "La linea rival queda rota por un segundo.", [
@@ -239,6 +284,21 @@ const HIGHLIGHTS = {
       option("Atacar primer palo", "pace", 15, "goal", "Ganas la carrera y cambias la direccion."),
       option("Bajar de pecho", "composure", 12, "keyPass", "La segunda jugada queda viva."),
       option("Media vuelta", "shooting", 18, "goal", "Te inventas un remate sin angulo."),
+    ]),
+    scenario("Apoyo de espaldas", "El mediocentro te encuentra con un central encima.", [
+      option("Descargar de cara", "passing", 11, "buildUp", "Tu apoyo sostiene el ataque."),
+      option("Girar con control", "dribbling", 15, "keyPass", "Te sacas la marca y atraes ayuda."),
+      option("Dejar al extremo", "passing", 14, "assist", "Tu toque libera el centro raso."),
+    ]),
+    scenario("Presion del nueve", "El portero rival duda con la pelota.", [
+      option("Tapar pase corto", "composure", 12, "press", "Obligas al pelotazo."),
+      option("Morder al central", "pace", 14, "press", "Tu presion deja un rebote util."),
+      option("Robar y definir", "shooting", 18, "goal", "Castigas el error en un toque."),
+    ]),
+    scenario("Corner cerrado", "La pelota parada te da una chance entre empujones.", [
+      option("Peinar al segundo", "passing", 13, "assist", "Tu roce deja el remate franco."),
+      option("Cabecear fuerte", "shooting", 17, "goal", "Ganas el duelo aereo."),
+      option("Bloquear al central", "stamina", 11, "corner", "Abres espacio para el rematador."),
     ]),
   ],
 };
@@ -620,7 +680,7 @@ function renderMatchPanel() {
   }
 
   const highlight = state.match.highlights[state.match.step];
-  els.matchBadge.textContent = `D20 ${state.match.step + 1}/2`;
+  els.matchBadge.textContent = `D20 ${state.match.step + 1}/${state.match.highlights.length}`;
   els.matchStory.innerHTML = `
     <strong>${highlight.title}</strong>
     <p>${highlight.copy}</p>
@@ -655,7 +715,7 @@ function beginMatch() {
     awayId: context.away,
     scoreFor: context.home === state.career.clubId ? baseline.homeGoals : baseline.awayGoals,
     scoreAgainst: context.home === state.career.clubId ? baseline.awayGoals : baseline.homeGoals,
-    highlights: buildHighlights(state.player.position),
+    highlights: buildHighlights(state.player.position, event.opponentId, event.type),
     step: 0,
     stats: emptyMatchStats(),
     lastRoll: null,
@@ -717,6 +777,19 @@ function applyReward(reward) {
     if (Math.random() < 0.22) state.match.scoreFor += 1;
   }
   if (reward === "tackle") stats.tackles += 1;
+  if (reward === "block") stats.blocks += 1;
+  if (reward === "clearance") stats.clearances += 1;
+  if (reward === "press") stats.presses += 1;
+  if (reward === "organize") stats.commands += 1;
+  if (reward === "control") stats.controls += 1;
+  if (reward === "buildUp") {
+    stats.buildUps += 1;
+    if (Math.random() < 0.18) stats.keyPasses += 1;
+  }
+  if (reward === "corner") {
+    stats.cornersWon += 1;
+    if (Math.random() < 0.16) state.match.scoreFor += 1;
+  }
   if (reward === "save") stats.saves += 1;
   if (reward === "counter") {
     stats.saves += 1;
@@ -1171,7 +1244,7 @@ function currentSeasonPlayerStats() {
   const results = [...allPlayerResults()];
   return results.reduce((totals, result) => {
     totals.matches += 1;
-    ["goals", "assists", "keyPasses", "tackles", "saves", "decisions", "successes"].forEach((key) => totals[key] += result[key] || 0);
+    trackedStats().forEach((key) => totals[key] += result[key] || 0);
     totals.ratingPoints += result.rating || 0;
     totals.wins += result.result === "W" ? 1 : 0;
     totals.draws += result.result === "D" ? 1 : 0;
@@ -1188,10 +1261,11 @@ function allPlayerResults() {
 
 function metricsForPosition(stats) {
   const base = [["Partidos", stats.matches], ["Nota media", stats.matches ? (stats.ratingPoints / stats.matches).toFixed(1) : "0.0"], ["Victorias", stats.wins], ["Decisiones", `${stats.successes}/${stats.decisions}`]];
-  if (state.player.position === "gk") return [...base, ["Paradas", stats.saves], ["Vallas utiles", Math.max(0, stats.wins - stats.goals)], ["Pases clave", stats.keyPasses], ["Asistencias", stats.assists]];
-  if (state.player.position === "def") return [...base, ["Robos", stats.tackles], ["Pases clave", stats.keyPasses], ["Asistencias", stats.assists], ["Goles", stats.goals]];
-  if (state.player.position === "mid") return [...base, ["Asistencias", stats.assists], ["Pases clave", stats.keyPasses], ["Robos", stats.tackles], ["Goles", stats.goals]];
-  return [...base, ["Goles", stats.goals], ["Asistencias", stats.assists], ["Pases clave", stats.keyPasses], ["Robos", stats.tackles]];
+  if (state.player.position === "gk") return [...base, ["Paradas", stats.saves], ["Mandos", stats.commands], ["Salidas", stats.buildUps], ["Pases clave", stats.keyPasses]];
+  if (state.player.position === "def") return [...base, ["Robos", stats.tackles], ["Bloqueos", stats.blocks], ["Despejes", stats.clearances], ["Goles", stats.goals]];
+  if (state.player.position === "mid") return [...base, ["Asistencias", stats.assists], ["Pases clave", stats.keyPasses], ["Controles", stats.controls], ["Robos", stats.tackles]];
+  if (state.player.position === "wing") return [...base, ["Asistencias", stats.assists], ["Goles", stats.goals], ["Corners", stats.cornersWon], ["Repliegues", stats.tackles + stats.blocks]];
+  return [...base, ["Goles", stats.goals], ["Asistencias", stats.assists], ["Apoyos", stats.buildUps], ["Presiones", stats.presses]];
 }
 
 function summarizeSeason() {
@@ -1294,9 +1368,10 @@ function seasonHistoryMarkup() {
 }
 
 function historyColumns() {
-  if (state.player.position === "gk") return [["Paradas", "saves"], ["Asist", "assists"]];
-  if (state.player.position === "def") return [["Robos", "tackles"], ["P. clave", "keyPasses"]];
+  if (state.player.position === "gk") return [["Paradas", "saves"], ["Mandos", "commands"]];
+  if (state.player.position === "def") return [["Robos", "tackles"], ["Despejes", "clearances"]];
   if (state.player.position === "mid") return [["Asist", "assists"], ["P. clave", "keyPasses"]];
+  if (state.player.position === "wing") return [["Asist", "assists"], ["Corners", "cornersWon"]];
   return [["Goles", "goals"], ["Asist", "assists"]];
 }
 
@@ -1341,17 +1416,17 @@ function emptyRow(clubId) {
 }
 
 function emptyTotals() {
-  return { matches: 0, goals: 0, assists: 0, keyPasses: 0, tackles: 0, saves: 0, decisions: 0, successes: 0, ratingPoints: 0, wins: 0, draws: 0, losses: 0 };
+  return { matches: 0, goals: 0, assists: 0, keyPasses: 0, tackles: 0, blocks: 0, clearances: 0, presses: 0, commands: 0, controls: 0, buildUps: 0, cornersWon: 0, saves: 0, decisions: 0, successes: 0, ratingPoints: 0, wins: 0, draws: 0, losses: 0 };
 }
 
 function emptyMatchStats() {
-  return { goals: 0, assists: 0, keyPasses: 0, tackles: 0, saves: 0, decisions: 0, successes: 0, rating: 0 };
+  return { goals: 0, assists: 0, keyPasses: 0, tackles: 0, blocks: 0, clearances: 0, presses: 0, commands: 0, controls: 0, buildUps: 0, cornersWon: 0, saves: 0, decisions: 0, successes: 0, rating: 0 };
 }
 
 function mergeTotals(stats) {
   const totals = state.career.totals;
   totals.matches += 1;
-  ["goals", "assists", "keyPasses", "tackles", "saves", "decisions", "successes"].forEach((key) => totals[key] += stats[key] || 0);
+  trackedStats().forEach((key) => totals[key] += stats[key] || 0);
   totals.ratingPoints += stats.rating;
   totals.wins += stats.result === "W" ? 1 : 0;
   totals.draws += stats.result === "D" ? 1 : 0;
@@ -1366,8 +1441,23 @@ function awardGrowth(stats) {
   state.player.attributes[attribute] = clamp(state.player.attributes[attribute] + 1, 25, 99);
 }
 
-function buildHighlights(positionId) {
-  return shuffle([...HIGHLIGHTS[positionId], ...HIGHLIGHTS[positionId]]).slice(0, 2).map((highlight) => structuredClone(highlight));
+function buildHighlights(positionId, opponentId, type) {
+  const count = highlightCount(opponentId, type);
+  const source = HIGHLIGHTS[positionId];
+  return shuffle([...source, ...source]).slice(0, count).map((highlight) => structuredClone(highlight));
+}
+
+function highlightCount(opponentId, type) {
+  const rival = getClub(opponentId);
+  const own = getClub(state.career.clubId);
+  const pressure = clamp(Math.round((rival.rating - own.rating) / 8), -2, 3);
+  const european = type === "champions" ? 1 : 0;
+  const swing = randomInt(0, 2);
+  return clamp(2 + swing + Math.max(0, pressure) + european, 2, 5);
+}
+
+function trackedStats() {
+  return ["goals", "assists", "keyPasses", "tackles", "blocks", "clearances", "presses", "commands", "controls", "buildUps", "cornersWon", "saves", "decisions", "successes"];
 }
 
 function statModifier(attribute) {

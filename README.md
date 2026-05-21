@@ -25,8 +25,8 @@ npm run test:smoke
 - Creacion de jugador con skin y posicion; el uniforme hereda colores del club.
 - Tres ofertas iniciales de clubes de tabla baja.
 - Temporadas domesticas completas de 38 jornadas o 34 jornadas segun la liga.
-- Partidos de highlights interactivos con tiradas d20, dificultad por estadistica
-  y poder del rival.
+- Partidos con 2 a 5 highlights variados segun rival, tiradas d20,
+  dificultad por estadistica y poder del rival.
 - Tablas de liga, panel de estadisticas por temporada y rankings de goleadores
   y asistentes con jugadores reales sembrados para cada gran liga.
 - Champions FUOL desde la segunda temporada para los 32 clubes con mas puntos

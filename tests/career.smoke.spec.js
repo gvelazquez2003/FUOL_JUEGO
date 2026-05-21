@@ -21,8 +21,15 @@ test("starts a career and resolves the first match", async ({ page }) => {
 
   for (let round = 0; round < leagueRounds; round += 1) {
     await page.getByText("Jugar partido").click();
-    await page.locator(".action-button").first().click();
-    await page.locator(".action-button").first().click();
+    const decisionCount = await page.locator(".action-button small").first().evaluate((node) => {
+      const match = node.closest(".match-panel").querySelector("#matchBadge").textContent.match(/\/(\d+)/);
+      return Number(match[1]);
+    });
+    expect(decisionCount).toBeGreaterThanOrEqual(2);
+    expect(decisionCount).toBeLessThanOrEqual(5);
+    for (let decision = 0; decision < decisionCount; decision += 1) {
+      await page.locator(".action-button").first().click();
+    }
   }
 
   await expect(page.locator("#seasonRoute .route-node.done")).toHaveCount(leagueRounds);
