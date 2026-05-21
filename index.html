@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FUOL Carrera Pixel</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="stadium-shell" aria-hidden="true">
+      <div class="pixel-crowd crowd-top"></div>
+      <div class="pixel-crowd crowd-bottom"></div>
+    </div>
+
+    <main class="game-shell">
+      <header class="masthead">
+        <div>
+          <p class="eyebrow">FUOL</p>
+          <h1>Carrera Pixel</h1>
+        </div>
+        <div class="header-actions">
+          <button id="openAtlasButton" class="pixel-button compact" type="button">
+            Clubes
+          </button>
+          <button id="resetButton" class="pixel-button compact danger" type="button">
+            Reiniciar
+          </button>
+        </div>
+      </header>
+
+      <section id="setupScreen" class="screen setup-screen">
+        <div class="setup-copy">
+          <p class="eyebrow">Temporada 1</p>
+          <h2>Firma tu primer contrato</h2>
+          <p>
+            Elige tu aspecto, uniforme, posicion y una de las tres puertas de
+            entrada a la elite. Cada temporada sera un examen para subir de club.
+          </p>
+        </div>
+
+        <form id="playerForm" class="setup-grid">
+          <section class="panel maker-panel">
+            <div class="panel-heading">
+              <h3>Jugador</h3>
+              <span id="positionHint" class="tag">Delantero</span>
+            </div>
+
+            <label class="field-label" for="playerName">Nombre</label>
+            <input
+              id="playerName"
+              class="pixel-input"
+              maxlength="18"
+              value="Canterano"
+              autocomplete="off"
+            />
+
+            <fieldset>
+              <legend>Skin</legend>
+              <div id="skinChoices" class="swatch-row skin-row"></div>
+            </fieldset>
+
+            <div class="uniform-grid">
+              <label>
+                Color base
+                <input id="kitColor" type="color" value="#2dd4bf" />
+              </label>
+              <label>
+                Detalle
+                <input id="trimColor" type="color" value="#facc15" />
+              </label>
+            </div>
+
+            <fieldset>
+              <legend>Posicion</legend>
+              <div id="positionChoices" class="position-grid"></div>
+            </fieldset>
+          </section>
+
+          <section class="panel preview-panel">
+            <div class="panel-heading">
+              <h3>Vista previa</h3>
+              <span class="tag">Pixel XI</span>
+            </div>
+            <canvas
+              id="playerPreview"
+              width="176"
+              height="208"
+              aria-label="Vista previa del jugador"
+            ></canvas>
+            <div id="starterStats" class="starter-stats"></div>
+          </section>
+
+          <section class="panel contract-panel">
+            <div class="panel-heading">
+              <h3>Club inicial</h3>
+              <span class="tag">3 opciones</span>
+            </div>
+            <p class="small-copy">
+              Solo llegan llamadas de proyectos de tabla baja. Gana minutos,
+              reputacion y trofeos para abrir fichajes mas grandes.
+            </p>
+            <div id="starterClubs" class="club-choice-grid"></div>
+            <button id="startCareerButton" class="pixel-button primary" type="submit">
+              Comenzar carrera
+            </button>
+          </section>
+        </form>
+      </section>
+
+      <section id="careerScreen" class="screen career-screen hidden">
+        <div id="careerHud" class="career-hud"></div>
+
+        <div class="career-grid">
+          <section class="panel route-panel">
+            <div class="panel-heading">
+              <h2 id="seasonTitle">Temporada</h2>
+              <span id="seasonStatus" class="tag">En curso</span>
+            </div>
+            <div id="seasonRoute" class="season-route"></div>
+            <div id="trainingDock" class="training-dock"></div>
+          </section>
+
+          <section class="panel match-panel">
+            <div class="panel-heading">
+              <h2>Partido</h2>
+              <span id="matchBadge" class="tag">Highlights</span>
+            </div>
+            <canvas
+              id="matchCanvas"
+              width="520"
+              height="300"
+              aria-label="Cancha del partido"
+            ></canvas>
+            <div id="matchStory" class="match-story"></div>
+            <div id="matchActions" class="match-actions"></div>
+          </section>
+
+          <section class="panel dossier-panel">
+            <div class="panel-heading">
+              <h2>Dossier</h2>
+              <span id="overallBadge" class="tag">OVR</span>
+            </div>
+            <div id="attributeGrid" class="attribute-grid"></div>
+            <div id="careerTotals" class="career-totals"></div>
+          </section>
+        </div>
+
+        <section id="offerPanel" class="panel offer-panel hidden">
+          <div class="panel-heading">
+            <h2 id="offerTitle">Mercado</h2>
+            <span class="tag">Decision</span>
+          </div>
+          <p id="offerSummary"></p>
+          <div id="offerChoices" class="offer-grid"></div>
+        </section>
+      </section>
+    </main>
+
+    <dialog id="clubAtlas" class="atlas-dialog">
+      <div class="atlas-shell">
+        <div class="panel-heading atlas-heading">
+          <div>
+            <p class="eyebrow">Base de datos</p>
+            <h2>Primera division</h2>
+          </div>
+          <button id="closeAtlasButton" class="pixel-button compact" type="button">
+            Cerrar
+          </button>
+        </div>
+        <div id="leagueTabs" class="league-tabs"></div>
+        <div id="atlasClubs" class="atlas-clubs"></div>
+      </div>
+    </dialog>
+
+    <template id="clubCardTemplate">
+      <button class="club-card" type="button">
+        <span class="club-pixels"></span>
+        <strong></strong>
+        <small></small>
+      </button>
+    </template>
+
+    <script src="game.js"></script>
+  </body>
+</html>

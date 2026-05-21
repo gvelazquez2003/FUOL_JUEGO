@@ -1,0 +1,728 @@
+:root {
+  --ink: #07120e;
+  --night: #10211a;
+  --panel: #f5e7b8;
+  --panel-edge: #e0b95d;
+  --paper: #fff4d2;
+  --grass: #167a45;
+  --grass-dark: #0d4f32;
+  --sun: #ffd447;
+  --coral: #e85353;
+  --sky: #6ee7f7;
+  --line: #f8f0cf;
+  --shadow: #04110b;
+  --radius: 8px;
+  color-scheme: dark;
+  font-family: "Courier New", "Lucida Console", monospace;
+  letter-spacing: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  color: var(--ink);
+  background:
+    linear-gradient(180deg, #2a4962 0 18%, #3f7268 18% 32%, #0c2618 32% 100%);
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.stadium-shell {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+}
+
+.stadium-shell::before {
+  position: absolute;
+  inset: 26vh -8vw -12vh;
+  content: "";
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.08) 0 12vw,
+      rgba(0, 0, 0, 0.08) 12vw 24vw
+    ),
+    var(--grass);
+  border-top: 8px solid rgba(244, 239, 195, 0.8);
+  transform: perspective(560px) rotateX(48deg);
+  box-shadow: inset 0 0 0 6px rgba(248, 240, 207, 0.6);
+}
+
+.pixel-crowd {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 15vh;
+  opacity: 0.95;
+  background:
+    linear-gradient(90deg, transparent 0 2px, rgba(0, 0, 0, 0.22) 2px 4px),
+    repeating-linear-gradient(
+      90deg,
+      #facc15 0 8px,
+      #ef476f 8px 16px,
+      #5eead4 16px 24px,
+      #f4f1de 24px 32px,
+      #152238 32px 40px
+    );
+  background-size: 4px 4px, 40px 12px;
+}
+
+.crowd-top {
+  top: 0;
+  border-bottom: 8px solid #21342d;
+}
+
+.crowd-bottom {
+  bottom: 0;
+  height: 10vh;
+  border-top: 8px solid #21342d;
+}
+
+.game-shell {
+  position: relative;
+  z-index: 1;
+  width: min(1280px, calc(100vw - 24px));
+  margin: 0 auto;
+  padding: 26px 0 34px;
+}
+
+.masthead,
+.panel,
+.screen {
+  border: 4px solid var(--shadow);
+  border-radius: var(--radius);
+  box-shadow:
+    5px 5px 0 var(--shadow),
+    inset -3px -3px 0 rgba(84, 43, 16, 0.22),
+    inset 3px 3px 0 rgba(255, 255, 255, 0.46);
+}
+
+.masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding: 16px 18px;
+  background: var(--paper);
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0;
+  font-size: clamp(1.7rem, 3vw, 3rem);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+h2 {
+  margin-bottom: 10px;
+  font-size: clamp(1.15rem, 2vw, 1.65rem);
+}
+
+h3 {
+  margin-bottom: 0;
+  font-size: 1.05rem;
+}
+
+.eyebrow {
+  margin-bottom: 6px;
+  color: #a23b3b;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.screen {
+  padding: clamp(14px, 2vw, 24px);
+  background: rgba(255, 244, 210, 0.92);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.header-actions,
+.panel-heading,
+.club-card,
+.club-option,
+.hud-club,
+.offer-card {
+  display: flex;
+}
+
+.header-actions {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pixel-button,
+.club-card,
+.position-button,
+.action-button,
+.training-button,
+.offer-card,
+.league-tab {
+  min-height: 44px;
+  border: 3px solid var(--shadow);
+  border-radius: 5px;
+  color: var(--ink);
+  background: var(--paper);
+  box-shadow:
+    3px 3px 0 var(--shadow),
+    inset -2px -2px 0 rgba(84, 43, 16, 0.18),
+    inset 2px 2px 0 rgba(255, 255, 255, 0.46);
+}
+
+.pixel-button {
+  padding: 10px 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.pixel-button.primary,
+.position-button.active,
+.league-tab.active {
+  background: var(--sun);
+}
+
+.pixel-button.danger {
+  color: #fff5df;
+  background: #912f40;
+}
+
+.pixel-button.compact {
+  min-height: 38px;
+  padding: 8px 10px;
+  font-size: 0.86rem;
+}
+
+.setup-screen {
+  display: grid;
+  gap: 18px;
+}
+
+.setup-copy {
+  max-width: 700px;
+}
+
+.setup-copy p:last-child,
+.small-copy,
+#offerSummary {
+  line-height: 1.45;
+}
+
+.setup-grid,
+.career-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.setup-grid {
+  grid-template-columns: 1.05fr 0.62fr 1fr;
+}
+
+.panel {
+  padding: 14px;
+  background: var(--panel);
+}
+
+.panel-heading {
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.tag {
+  flex: 0 0 auto;
+  min-height: 26px;
+  padding: 4px 8px;
+  border: 2px solid var(--shadow);
+  color: #fff8db;
+  background: #163b3f;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+fieldset {
+  min-width: 0;
+  margin: 13px 0 0;
+  padding: 0;
+  border: 0;
+}
+
+legend,
+.field-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.pixel-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px;
+  border: 3px solid var(--shadow);
+  border-radius: 4px;
+  color: var(--ink);
+  background: #fff7df;
+  box-shadow: inset 3px 3px 0 rgba(0, 0, 0, 0.12);
+}
+
+.swatch-row,
+.position-grid,
+.club-choice-grid,
+.match-actions,
+.offer-grid,
+.league-tabs {
+  display: grid;
+  gap: 10px;
+}
+
+.swatch-row {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.skin-button {
+  position: relative;
+  min-height: 48px;
+  border: 3px solid var(--shadow);
+  border-radius: 4px;
+  background: var(--skin);
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+
+.skin-button.active::after {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 12px;
+  height: 12px;
+  content: "";
+  border: 2px solid var(--shadow);
+  background: var(--sun);
+}
+
+.uniform-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.uniform-grid label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+input[type="color"] {
+  width: 100%;
+  height: 48px;
+  padding: 4px;
+  border: 3px solid var(--shadow);
+  background: #fff7df;
+}
+
+.position-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.position-button {
+  display: grid;
+  align-content: center;
+  min-width: 0;
+  padding: 8px;
+  text-align: left;
+}
+
+.position-button strong,
+.action-button strong,
+.training-button strong,
+.offer-card strong,
+.club-card strong {
+  display: block;
+}
+
+.position-button small,
+.club-card small,
+.action-button small,
+.training-button small,
+.offer-card small {
+  display: block;
+  margin-top: 4px;
+  line-height: 1.28;
+}
+
+.preview-panel {
+  display: grid;
+  align-content: start;
+}
+
+canvas {
+  display: block;
+  image-rendering: pixelated;
+  border: 4px solid var(--shadow);
+  border-radius: 4px;
+  background: var(--grass);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.18);
+}
+
+#playerPreview {
+  width: min(100%, 220px);
+  margin: 0 auto 12px;
+  aspect-ratio: 176 / 208;
+}
+
+.starter-stats,
+.attribute-grid {
+  display: grid;
+  gap: 8px;
+}
+
+.stat-chip,
+.total-chip {
+  display: grid;
+  gap: 5px;
+  padding: 8px;
+  border: 2px solid rgba(7, 18, 14, 0.7);
+  background: rgba(255, 247, 223, 0.84);
+}
+
+.meter {
+  height: 10px;
+  border: 2px solid var(--shadow);
+  background: #dec985;
+}
+
+.meter span {
+  display: block;
+  width: var(--value);
+  height: 100%;
+  background: linear-gradient(90deg, #2f9f67, var(--sky));
+}
+
+.contract-panel {
+  display: grid;
+  align-content: start;
+}
+
+.club-choice-grid {
+  margin-bottom: 14px;
+}
+
+.club-card,
+.offer-card {
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  padding: 10px;
+  text-align: left;
+}
+
+.club-card.active,
+.offer-card.active {
+  background: #ffe07c;
+}
+
+.club-pixels,
+.kit-pixels {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--shadow);
+  background:
+    linear-gradient(90deg, var(--club-a) 0 50%, var(--club-b) 50% 100%);
+  box-shadow: inset 0 0 0 3px rgba(255, 255, 255, 0.22);
+}
+
+.career-hud {
+  display: grid;
+  grid-template-columns: 1.25fr repeat(4, minmax(0, 0.72fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.hud-card {
+  min-width: 0;
+  padding: 12px;
+  border: 4px solid var(--shadow);
+  border-radius: var(--radius);
+  color: #fff5d6;
+  background: #12382d;
+  box-shadow: 4px 4px 0 var(--shadow);
+}
+
+.hud-card strong {
+  display: block;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+  color: #fff9e5;
+  font-size: 1.08rem;
+}
+
+.hud-label {
+  display: block;
+  color: #a7f3d0;
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.hud-club {
+  align-items: center;
+  gap: 10px;
+}
+
+.career-grid {
+  grid-template-columns: 0.92fr 1.2fr 0.8fr;
+}
+
+.season-route {
+  display: grid;
+  gap: 10px;
+}
+
+.route-node {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  min-height: 70px;
+  padding: 10px 10px 10px 42px;
+  border: 3px solid var(--shadow);
+  border-radius: 4px;
+  background: #fff0c4;
+}
+
+.route-node::before {
+  position: absolute;
+  top: 17px;
+  left: 12px;
+  width: 18px;
+  height: 18px;
+  content: "";
+  border: 3px solid var(--shadow);
+  background: #cab573;
+}
+
+.route-node.current::before {
+  background: var(--sun);
+}
+
+.route-node.done::before {
+  background: #35c67a;
+}
+
+.route-node.current {
+  background: #fff7df;
+}
+
+.route-node small,
+.match-story p,
+.career-totals p {
+  line-height: 1.4;
+}
+
+.training-dock {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.training-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.training-button,
+.action-button {
+  min-width: 0;
+  padding: 10px;
+  text-align: left;
+}
+
+.training-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+#matchCanvas {
+  width: 100%;
+  min-height: 220px;
+  aspect-ratio: 26 / 15;
+}
+
+.match-story {
+  min-height: 96px;
+  margin-top: 12px;
+  padding: 10px;
+  border: 3px solid var(--shadow);
+  background: #fff4cf;
+}
+
+.match-story strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.match-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 10px;
+}
+
+.action-button.good {
+  background: #c4ffd9;
+}
+
+.action-button.bad {
+  background: #ffd1c9;
+}
+
+.attribute-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.career-totals {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.total-chip strong {
+  font-size: 1.05rem;
+}
+
+.offer-panel {
+  margin-top: 16px;
+}
+
+.offer-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.atlas-dialog {
+  width: min(1080px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  padding: 0;
+  border: 4px solid var(--shadow);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: var(--panel);
+  box-shadow: 8px 8px 0 var(--shadow);
+}
+
+.atlas-dialog::backdrop {
+  background: rgba(3, 10, 8, 0.72);
+}
+
+.atlas-shell {
+  display: grid;
+  max-height: calc(100vh - 32px);
+  padding: 16px;
+}
+
+.atlas-heading {
+  margin-bottom: 14px;
+}
+
+.league-tabs {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+
+.league-tab {
+  min-width: 0;
+  padding: 9px;
+  font-weight: 700;
+}
+
+.atlas-clubs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  overflow: auto;
+  padding: 2px 6px 8px 2px;
+}
+
+@media (max-width: 1040px) {
+  .setup-grid,
+  .career-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .career-hud {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hud-card:first-child {
+    grid-column: span 2;
+  }
+
+  .offer-grid,
+  .atlas-clubs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .game-shell {
+    width: min(100% - 14px, 680px);
+    padding-top: 12px;
+  }
+
+  .masthead {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .position-grid,
+  .match-actions,
+  .league-tabs,
+  .training-options,
+  .offer-grid,
+  .atlas-clubs {
+    grid-template-columns: 1fr;
+  }
+
+  .uniform-grid,
+  .attribute-grid,
+  .career-totals {
+    grid-template-columns: 1fr;
+  }
+
+  .career-hud {
+    grid-template-columns: 1fr;
+  }
+
+  .hud-card:first-child {
+    grid-column: auto;
+  }
+}
