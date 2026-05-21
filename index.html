@@ -33,8 +33,8 @@
           <p class="eyebrow">Temporada 1</p>
           <h2>Firma tu primer contrato</h2>
           <p>
-            Elige tu aspecto, uniforme, posicion y una de las tres puertas de
-            entrada a la elite. Cada temporada sera un examen para subir de club.
+            Elige tu aspecto, posicion y una de las tres puertas de entrada a la
+            elite. Tu uniforme seguira los colores del club que te fiche.
           </p>
         </div>
 
@@ -58,17 +58,6 @@
               <legend>Skin</legend>
               <div id="skinChoices" class="swatch-row skin-row"></div>
             </fieldset>
-
-            <div class="uniform-grid">
-              <label>
-                Color base
-                <input id="kitColor" type="color" value="#2dd4bf" />
-              </label>
-              <label>
-                Detalle
-                <input id="trimColor" type="color" value="#facc15" />
-              </label>
-            </div>
 
             <fieldset>
               <legend>Posicion</legend>
@@ -145,6 +134,18 @@
           </section>
         </div>
 
+        <section class="panel world-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Centro de temporada</p>
+              <h2>Tablas y premios</h2>
+            </div>
+            <span id="worldBadge" class="tag">Liga</span>
+          </div>
+          <div id="worldTabs" class="world-tabs"></div>
+          <div id="worldView" class="world-view"></div>
+        </section>
+
         <section id="offerPanel" class="panel offer-panel hidden">
           <div class="panel-heading">
             <h2 id="offerTitle">Mercado</h2>
@@ -169,6 +170,21 @@
         </div>
         <div id="leagueTabs" class="league-tabs"></div>
         <div id="atlasClubs" class="atlas-clubs"></div>
+      </div>
+    </dialog>
+
+    <dialog id="awardDialog" class="award-dialog">
+      <div class="award-shell">
+        <div class="panel-heading atlas-heading">
+          <div>
+            <p class="eyebrow">Gala anual</p>
+            <h2>Balon de Oro</h2>
+          </div>
+          <button id="closeAwardButton" class="pixel-button compact" type="button">
+            Cerrar
+          </button>
+        </div>
+        <div id="awardStage" class="award-stage"></div>
       </div>
     </dialog>
 
