@@ -562,6 +562,8 @@ canvas {
   border: 3px solid var(--shadow);
   border-radius: 4px;
   background: #fff0c4;
+  color: var(--ink);
+  text-align: left;
 }
 
 .route-node::before {
@@ -581,6 +583,17 @@ canvas {
 
 .route-node.done::before {
   background: #35c67a;
+}
+
+button.route-node.done {
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+
+button.route-node.done:hover,
+button.route-node.done:focus-visible {
+  background: #fff7df;
+  transform: translate(-1px, -1px);
 }
 
 .route-node.current {
@@ -794,12 +807,13 @@ canvas {
 }
 
 .offer-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: grid;
+  gap: 12px;
 }
 
 .world-tabs {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 12px;
 }
@@ -824,6 +838,116 @@ canvas {
   display: grid;
   gap: 12px;
   min-height: 250px;
+}
+
+.squad-finder,
+.squad-head,
+.market-window,
+.market-feed {
+  border: 3px solid var(--shadow);
+  background: #fff4cf;
+}
+
+.squad-finder,
+.market-window,
+.market-feed {
+  padding: 10px;
+}
+
+.search-field {
+  display: grid;
+  gap: 5px;
+  font-weight: 700;
+}
+
+.search-field input {
+  min-width: 0;
+  min-height: 42px;
+  border: 3px solid var(--shadow);
+  padding: 8px;
+  color: var(--ink);
+  background: #fff9e6;
+  font: inherit;
+}
+
+.squad-club-grid,
+.offer-deck {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.squad-club {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px;
+  border: 3px solid var(--shadow);
+  color: var(--ink);
+  background: #fff9e6;
+  text-align: left;
+  font: inherit;
+}
+
+.squad-club small,
+.squad-head span,
+.market-feed span,
+.squad-table td:first-child small {
+  display: block;
+  line-height: 1.35;
+}
+
+.squad-club.active {
+  background: var(--sun);
+}
+
+.squad-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+}
+
+.squad-table {
+  min-width: 980px;
+}
+
+.market-grid {
+  display: grid;
+  grid-template-columns: 0.82fr 1.18fr;
+  gap: 12px;
+}
+
+.market-window {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.market-window p {
+  margin: 0;
+  line-height: 1.4;
+}
+
+.market-clock {
+  display: grid;
+  gap: 4px;
+}
+
+.market-feed ol {
+  display: grid;
+  gap: 7px;
+  max-height: 310px;
+  margin: 8px 0 0;
+  padding: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.market-feed li {
+  padding: 7px;
+  background: rgba(22, 122, 69, 0.1);
 }
 
 .table-shell {
@@ -928,7 +1052,8 @@ canvas {
 }
 
 .atlas-dialog,
-.award-dialog {
+.award-dialog,
+.history-dialog {
   width: min(1080px, calc(100vw - 24px));
   max-height: calc(100vh - 24px);
   padding: 0;
@@ -940,15 +1065,44 @@ canvas {
 }
 
 .atlas-dialog::backdrop,
-.award-dialog::backdrop {
+.award-dialog::backdrop,
+.history-dialog::backdrop {
   background: rgba(3, 10, 8, 0.72);
 }
 
 .atlas-shell,
-.award-shell {
+.award-shell,
+.history-shell {
   display: grid;
   max-height: calc(100vh - 32px);
   padding: 16px;
+}
+
+.history-body {
+  display: grid;
+  gap: 12px;
+  overflow: auto;
+}
+
+.history-score {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border: 3px solid var(--shadow);
+  color: #fff8db;
+  background: #12382d;
+  text-align: center;
+}
+
+.history-score > strong {
+  min-width: 96px;
+  padding: 10px;
+  border: 3px solid var(--shadow);
+  color: var(--ink);
+  background: var(--paper);
+  font-size: 1.45rem;
 }
 
 .atlas-heading {
@@ -1002,7 +1156,8 @@ canvas {
     grid-column: span 2;
   }
 
-  .offer-grid,
+  .offer-deck,
+  .squad-club-grid,
   .atlas-clubs,
   .season-stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1024,7 +1179,9 @@ canvas {
   .match-actions,
   .league-tabs,
   .world-tabs,
-  .offer-grid,
+  .offer-deck,
+  .squad-club-grid,
+  .market-grid,
   .atlas-clubs,
   .leader-grid,
   .champions-grid,
@@ -1039,6 +1196,7 @@ canvas {
   }
 
   .look-grid,
+  .history-score,
   .scoreboard-grid,
   .scorer-grid,
   .speed-controls {

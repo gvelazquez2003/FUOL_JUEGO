@@ -35,11 +35,23 @@ test("starts a career and resolves the first match", async ({ page }) => {
         tickMatchClock();
       }
     });
+    if (round === 0) {
+      await page.locator("#seasonRoute .route-node.done").first().click();
+      await expect(page.locator("#matchHistoryDialog")).toBeVisible();
+      await expect(page.locator("#matchHistoryBody")).toContainText("goleadores");
+      await page.locator("#closeHistoryButton").click();
+      await page.getByText("Plantillas").click();
+      await expect(page.locator("#squadSearch")).toBeVisible();
+      await expect(page.locator(".squad-table")).toContainText("Jugador");
+    }
   }
 
   await expect(page.locator("#seasonRoute .route-node.done")).toHaveCount(leagueRounds);
   await expect(page.locator("#awardDialog")).toBeVisible();
   await expect(page.locator("#offerPanel")).toBeVisible();
-  await expect(page.locator("#worldView")).toContainText("Club");
+  await page.locator("#closeAwardButton").click();
+  await page.getByText("Adelantar intervalo").click();
+  await expect(page.locator(".market-feed")).toContainText("Fichajes");
+  await expect(page.locator("#worldView")).toContainText(/Poder club|Club|Jugador/);
   expect(errors).toEqual([]);
 });

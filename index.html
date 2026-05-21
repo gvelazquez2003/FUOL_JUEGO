@@ -206,6 +206,21 @@
       </div>
     </dialog>
 
+    <dialog id="matchHistoryDialog" class="history-dialog">
+      <div class="history-shell">
+        <div class="panel-heading atlas-heading">
+          <div>
+            <p class="eyebrow">Historial</p>
+            <h2 id="matchHistoryTitle">Partido</h2>
+          </div>
+          <button id="closeHistoryButton" class="pixel-button compact" type="button">
+            Cerrar
+          </button>
+        </div>
+        <div id="matchHistoryBody" class="history-body"></div>
+      </div>
+    </dialog>
+
     <template id="clubCardTemplate">
       <button class="club-card" type="button">
         <span class="club-pixels"></span>
@@ -214,6 +229,7 @@
       </button>
     </template>
 
+    <script src="squad-seeds.js"></script>
     <script src="game.js"></script>
   </body>
 </html>

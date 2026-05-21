@@ -113,39 +113,6 @@ const CLUBS = [
   club("toulouse", "Toulouse FC", "TFC", "fra", 74, 2, "#7e22ce", "#f8fafc"),
 ];
 
-const STAR_PLAYERS = [
-  star("Erling Haaland", "man-city", 96, 0.78, 0.18),
-  star("Mohamed Salah", "liverpool", 93, 0.53, 0.32),
-  star("Alexander Isak", "newcastle", 91, 0.57, 0.17),
-  star("Bukayo Saka", "arsenal", 90, 0.35, 0.38),
-  star("Cole Palmer", "chelsea", 91, 0.43, 0.34),
-  star("Ollie Watkins", "aston-villa", 87, 0.42, 0.2),
-  star("Kylian Mbappe", "real-madrid", 96, 0.76, 0.22),
-  star("Robert Lewandowski", "barcelona", 91, 0.62, 0.12),
-  star("Lamine Yamal", "barcelona", 93, 0.35, 0.46),
-  star("Vinicius Junior", "real-madrid", 92, 0.42, 0.35),
-  star("Julian Alvarez", "atletico", 90, 0.47, 0.22),
-  star("Ayoze Perez", "villarreal", 86, 0.39, 0.18),
-  star("Harry Kane", "bayern", 96, 0.92, 0.22),
-  star("Michael Olise", "bayern", 92, 0.34, 0.55),
-  star("Luis Diaz", "bayern", 90, 0.48, 0.34),
-  star("Serhou Guirassy", "dortmund", 89, 0.55, 0.13),
-  star("Deniz Undav", "stuttgart", 87, 0.49, 0.18),
-  star("Patrik Schick", "leverkusen", 88, 0.5, 0.12),
-  star("Lautaro Martinez", "inter", 92, 0.63, 0.17),
-  star("Marcus Thuram", "inter", 88, 0.42, 0.23),
-  star("Christian Pulisic", "milan", 88, 0.38, 0.29),
-  star("Scott McTominay", "napoli", 87, 0.31, 0.2),
-  star("Dusan Vlahovic", "juventus", 88, 0.47, 0.1),
-  star("Ademola Lookman", "atalanta", 88, 0.44, 0.25),
-  star("Ousmane Dembele", "psg", 94, 0.53, 0.39),
-  star("Khvicha Kvaratskhelia", "psg", 91, 0.39, 0.35),
-  star("Mason Greenwood", "marseille", 88, 0.48, 0.2),
-  star("Maghnes Akliouche", "monaco", 87, 0.3, 0.34),
-  star("Jonathan David", "lille", 88, 0.55, 0.12),
-  star("Alexandre Lacazette", "lyon", 85, 0.4, 0.14),
-];
-
 const SKINS = [
   { id: "skin-1", label: "Bronce", color: "#8d5524", shadow: "#5e3516" },
   { id: "skin-2", label: "Miel", color: "#c68642", shadow: "#8c5324" },
@@ -358,6 +325,10 @@ const els = {
   awardDialog: document.querySelector("#awardDialog"),
   awardStage: document.querySelector("#awardStage"),
   closeAwardButton: document.querySelector("#closeAwardButton"),
+  matchHistoryDialog: document.querySelector("#matchHistoryDialog"),
+  matchHistoryTitle: document.querySelector("#matchHistoryTitle"),
+  matchHistoryBody: document.querySelector("#matchHistoryBody"),
+  closeHistoryButton: document.querySelector("#closeHistoryButton"),
   resetButton: document.querySelector("#resetButton"),
 };
 
@@ -367,16 +338,14 @@ let activeAtlasLeague = LEAGUES[0].id;
 let activeWorldTab = "my-table";
 let selectedStatsLeague = null;
 let selectedTableLeague = null;
+let selectedSquadClub = null;
+let squadSearch = "";
 let matchTimer = null;
 
 boot();
 
 function club(id, name, short, league, rating, tier, primary, secondary) {
   return { id, name, short, league, rating, tier, primary, secondary };
-}
-
-function star(name, clubId, ability, scoring, assisting) {
-  return { id: slug(`${clubId}-${name}`), name, clubId, ability, scoring, assisting };
 }
 
 function position(label, lane, description, base, focus) {
@@ -423,6 +392,7 @@ function bindEvents() {
   els.openAtlasButton.addEventListener("click", () => els.clubAtlas.showModal());
   els.closeAtlasButton.addEventListener("click", () => els.clubAtlas.close());
   els.closeAwardButton.addEventListener("click", () => els.awardDialog.close());
+  els.closeHistoryButton.addEventListener("click", () => els.matchHistoryDialog.close());
   els.resetButton.addEventListener("click", resetCareer);
 }
 
@@ -519,6 +489,7 @@ function renderStarterStats() {
 function startCareer(event) {
   event.preventDefault();
   const firstClubId = setup.starterClub || setup.starters[0];
+  const squads = createSquads();
   state = {
     version: 2,
     player: {
@@ -541,8 +512,10 @@ function startCareer(event) {
       awards: [],
       lastChampionsQualifiers: [],
       growthLog: [],
+      transferLog: [],
     },
-    world: createWorld(firstClubId, 1, []),
+    squads,
+    world: createWorld(firstClubId, 1, [], squads),
     match: null,
     offers: null,
     message: `Firmaste con ${getClub(firstClubId).name}. La primera temporada empieza con liga completa.`,
@@ -551,10 +524,10 @@ function startCareer(event) {
   renderCareer();
 }
 
-function createWorld(playerClubId, seasonNumber, qualifiers) {
+function createWorld(playerClubId, seasonNumber, qualifiers, squads = state?.squads) {
   const leagues = {};
   LEAGUES.forEach((league) => {
-    leagues[league.id] = createLeagueSeason(league.id);
+    leagues[league.id] = createLeagueSeason(league.id, squads);
   });
   return {
     seasonNumber,
@@ -565,14 +538,37 @@ function createWorld(playerClubId, seasonNumber, qualifiers) {
   };
 }
 
-function createLeagueSeason(leagueId) {
+function createSquads() {
+  return Object.fromEntries(CLUBS.map((clubData) => [
+    clubData.id,
+    (window.SQUAD_SEEDS?.[clubData.id] || []).map((seed) => hydrateSquadPlayer(seed, clubData.id)),
+  ]));
+}
+
+function hydrateSquadPlayer(seed, clubId) {
+  const forward = /\b(ST|CF|LW|RW)\b/.test(seed.positions);
+  const creator = /\b(CAM|CM|CDM|LM|RM|LW|RW)\b/.test(seed.positions);
+  const scoring = clamp(((seed.shooting || seed.ovr * 0.3) / 100) * (forward ? 1 : 0.26), 0.02, 1.2);
+  const assisting = clamp(((seed.passing || seed.ovr * 0.34) / 100) * (creator ? 0.9 : 0.22), 0.02, 1.1);
+  return {
+    ...seed,
+    clubId,
+    ability: seed.ovr,
+    scoring,
+    assisting,
+    market: clamp(seed.ovr / 100, 0.2, 1.15),
+    stats: { matches: 0, goals: 0, assists: 0, ratingPoints: 0 },
+  };
+}
+
+function createLeagueSeason(leagueId, squads) {
   const clubs = CLUBS.filter((candidate) => candidate.league === leagueId);
   return {
     leagueId,
     round: 0,
     schedule: roundRobin(clubs.map((candidate) => candidate.id)),
     table: Object.fromEntries(clubs.map((candidate) => [candidate.id, emptyRow(candidate.id)])),
-    leaders: seedLeaders(leagueId),
+    leaders: seedLeaders(leagueId, squads),
     playerResults: [],
   };
 }
@@ -640,33 +636,59 @@ function renderRoute() {
 
   leagueSeason.schedule.forEach((round, index) => {
     const fixture = round.find((game) => game.home === state.career.clubId || game.away === state.career.clubId);
-    const node = document.createElement("article");
+    const result = leagueSeason.playerResults[index];
+    const node = document.createElement(result ? "button" : "article");
     node.className = "route-node";
+    if (result) node.type = "button";
     if (index < leagueSeason.round) node.classList.add("done");
     if (event.type === "league" && index === leagueSeason.round) node.classList.add("current");
     const rivalId = fixture.home === state.career.clubId ? fixture.away : fixture.home;
-    const result = leagueSeason.playerResults[index];
     node.innerHTML = `
       <strong>Jornada ${index + 1}: ${getClub(rivalId).short}</strong>
       <small>${result ? result.summary : `${getClub(rivalId).name} espera el partido de liga.`}</small>
     `;
+    if (result) node.addEventListener("click", () => showMatchHistory(result, `Jornada ${index + 1}`));
     els.seasonRoute.append(node);
   });
 
   if (state.world.champions?.eligible) {
     state.world.champions.fixtures.forEach((rivalId, index) => {
       const result = state.world.champions.results[index];
-      const node = document.createElement("article");
+      const node = document.createElement(result ? "button" : "article");
       node.className = "route-node";
+      if (result) node.type = "button";
       if (result) node.classList.add("done");
       if (event.type === "champions" && event.index === index) node.classList.add("current");
       node.innerHTML = `
         <strong>Champions ${index + 1}: ${getClub(rivalId).short}</strong>
         <small>${result ? result.summary : "Noche europea de fase liga."}</small>
       `;
+      if (result) node.addEventListener("click", () => showMatchHistory(result, `Champions ${index + 1}`));
       els.seasonRoute.append(node);
     });
   }
+}
+
+function showMatchHistory(result, label) {
+  const log = result.matchLog;
+  if (!log) return;
+  els.matchHistoryTitle.textContent = `${label}: ${getClub(log.homeId).short} ${log.homeGoals}-${log.awayGoals} ${getClub(log.awayId).short}`;
+  els.matchHistoryBody.innerHTML = `
+    <div class="history-score">
+      ${scoreTeamMarkup(getClub(log.homeId))}
+      <strong>${log.homeGoals} - ${log.awayGoals}</strong>
+      ${scoreTeamMarkup(getClub(log.awayId))}
+    </div>
+    <div class="scorer-grid">
+      ${scorerMarkup(getClub(log.homeId).short, log.homeScorers)}
+      ${scorerMarkup(getClub(log.awayId).short, log.awayScorers)}
+    </div>
+    <div class="timeline-feed history-feed">
+      <strong>Highlights</strong>
+      <ul>${log.feed.slice(-8).reverse().map((entry) => `<li>${formatMinute(entry.minute)}' ${entry.text}</li>`).join("")}</ul>
+    </div>
+  `;
+  els.matchHistoryDialog.showModal();
 }
 
 function renderGrowthDock() {
@@ -744,7 +766,7 @@ function beginMatch() {
     highlights,
     events: buildMatchTimeline(highlights, baseline, context),
     processedEvents: [],
-    feed: [{ minute: 0, text: "Pitazo inicial. Los d20 quedan en manos del simulador." }],
+    feed: [{ minute: 0, text: "Pitazo inicial. El partido abre espacios desde el primer toque." }],
     step: 0,
     stats: emptyMatchStats(),
     lastRoll: null,
@@ -780,10 +802,10 @@ function resolveBackgroundHighlight(highlight, minute) {
     applyReward(choice.reward, minute);
     state.match.stats.successes += 1;
     awardDevelopment(choice.stat, minute);
-    pushMatchFeed(minute, `${choice.success} d20 ${die}${signed(odds.modifier)} supera DC ${odds.dc}.`);
+    pushMatchFeed(minute, `${state.player.name}: ${choice.success}`);
   } else {
     applyFailure(choice.reward, minute);
-    pushMatchFeed(minute, `${highlight.title}: d20 ${die}${signed(odds.modifier)} no llega a DC ${odds.dc}.`);
+    pushMatchFeed(minute, `${getClub(state.match.opponentId).short} apaga la jugada de ${state.player.name} en ${highlight.title.toLowerCase()}.`);
   }
   state.match.step += 1;
 }
@@ -953,6 +975,7 @@ function scoreGoal(clubId, scorer, minute, assist = "") {
   state.match.scorers[side].push({ name: scorer, minute, assist });
   const assistCopy = assist ? `, asistencia ${assist}` : "";
   pushMatchFeed(minute, `Gol ${getClub(clubId).short}: ${scorer}${assistCopy}.`);
+  creditSquadGoal(clubId, scorer, assist);
 }
 
 function pushMatchFeed(minute, text, tone = "info") {
@@ -960,14 +983,21 @@ function pushMatchFeed(minute, text, tone = "info") {
   state.match.feed = state.match.feed.slice(-10);
 }
 
+function creditSquadGoal(clubId, scorerName, assistName) {
+  const scorer = squadForClub(clubId).find((player) => player.name === scorerName);
+  const assister = squadForClub(clubId).find((player) => player.name === assistName);
+  if (scorer) scorer.stats.goals += 1;
+  if (assister) assister.stats.assists += 1;
+}
+
 function assistedScorer() {
-  const candidates = STAR_PLAYERS.filter((player) => player.clubId === state.career.clubId && player.name !== state.player.name);
+  const candidates = squadForClub(state.career.clubId).filter((player) => player.name !== state.player.name);
   return candidates.length ? weightedPick(candidates, "scoring").name : goalScorerName(state.career.clubId);
 }
 
 function goalScorerName(clubId) {
-  const candidates = STAR_PLAYERS.filter((player) => player.clubId === clubId);
-  return candidates.length ? weightedPick(candidates, "scoring").name : `${getClub(clubId).short} atacante`;
+  const candidates = squadForClub(clubId);
+  return candidates.length ? weightedPick(candidates, "scoring").name : `${getClub(clubId).name} XI`;
 }
 
 function matchWinWeight(clubA, clubB) {
@@ -1086,6 +1116,16 @@ function finishPlayerMatch() {
   stats.summary = `${getClub(state.career.clubId).short} ${stats.score} ${getClub(context.opponentId).short}. Nota ${stats.rating}.`;
   const homeGoals = context.homeId === state.career.clubId ? context.scoreFor : context.scoreAgainst;
   const awayGoals = context.homeId === state.career.clubId ? context.scoreAgainst : context.scoreFor;
+  const playerHome = context.homeId === state.career.clubId;
+  stats.matchLog = {
+    homeId: context.homeId,
+    awayId: context.awayId,
+    homeGoals,
+    awayGoals,
+    homeScorers: structuredClone(playerHome ? context.scorers.for : context.scorers.against),
+    awayScorers: structuredClone(playerHome ? context.scorers.against : context.scorers.for),
+    feed: structuredClone(context.feed),
+  };
 
   if (context.type === "league") {
     completeLeagueRound(context.roundIndex, stats, homeGoals, awayGoals);
@@ -1111,7 +1151,7 @@ function completeLeagueRound(roundIndex, stats, homeGoals, awayGoals) {
       leagueSeason.playerResults[roundIndex] = stats;
       recordResult(leagueSeason.table, fixture.home, fixture.away, homeGoals, awayGoals);
       addPlayerStatsToLeaders(leagueSeason.leaders, stats);
-      seedScorersFromMatch(fixture.home, fixture.away, homeGoals, awayGoals, leagueSeason.leaders, true);
+      recordLiveMatchOutputs(leagueSeason.leaders);
       return;
     }
     const simulated = simulateScore(fixture.home, fixture.away, "league");
@@ -1208,7 +1248,16 @@ function closeSeason() {
   state.message = `${summary.headline} El mercado y el Balon de Oro ya estan listos.`;
   state.offers = state.career.season >= MAX_SEASONS
     ? { final: true, summary, clubs: [] }
-    : { final: false, summary, clubs: offerSelection(summary) };
+    : {
+      final: false,
+      summary,
+      clubs: [],
+      market: {
+        interval: 0,
+        movedIds: [],
+        log: [{ title: "Apertura", copy: "El verano abre en diez ventanas. Los clubes estudian tu temporada antes de llamar." }],
+      },
+    };
   renderAwardDialog(state.world.award);
   els.awardDialog.showModal();
 }
@@ -1218,6 +1267,7 @@ function renderWorldTabs() {
     ["my-table", "Mi tabla"],
     ["season-stats", "Mi temporada"],
     ["leaders", "Goleadores"],
+    ["squads", "Plantillas"],
     ["champions", "Champions"],
     ["awards", "Balon Oro"],
   ];
@@ -1240,6 +1290,7 @@ function renderWorldView() {
   if (activeWorldTab === "my-table") renderLeagueTableView();
   if (activeWorldTab === "season-stats") renderSeasonStatsView();
   if (activeWorldTab === "leaders") renderLeadersView();
+  if (activeWorldTab === "squads") renderSquadsView();
   if (activeWorldTab === "champions") renderChampionsView();
   if (activeWorldTab === "awards") renderAwardsView();
 }
@@ -1336,6 +1387,90 @@ function renderAwardsView() {
   els.worldView.innerHTML = awardMarkup(award, false);
 }
 
+function renderSquadsView() {
+  selectedSquadClub ||= state.career.clubId;
+  const matches = CLUBS
+    .filter((clubData) => `${clubData.name} ${clubData.short} ${getLeague(clubData.league).name}`.toLowerCase().includes(squadSearch.toLowerCase()))
+    .sort((left, right) => (left.id === selectedSquadClub ? -1 : 0) - (right.id === selectedSquadClub ? -1 : 0) || right.rating - left.rating)
+    .slice(0, 16);
+  const selected = getClub(selectedSquadClub) || getClub(state.career.clubId);
+  els.worldBadge.textContent = `${selected.short} XI`;
+  els.worldView.innerHTML = `
+    <div class="squad-finder">
+      <label class="search-field">
+        <span>Buscar equipo</span>
+        <input id="squadSearch" type="search" value="${escapeHtml(squadSearch)}" placeholder="Arsenal, Cagliari, Ligue 1..." />
+      </label>
+      <div class="squad-club-grid">
+        ${matches.map((clubData) => `<button class="squad-club${clubData.id === selected.id ? " active" : ""}" type="button" data-squad-club="${clubData.id}"><strong>${clubData.name}</strong><small>${getLeague(clubData.league).competition}</small></button>`).join("")}
+      </div>
+    </div>
+    ${squadTableMarkup(selected.id)}
+  `;
+  els.worldView.querySelector("#squadSearch").addEventListener("input", (event) => {
+    squadSearch = event.target.value.slice(0, 36);
+    renderSquadsView();
+    const search = els.worldView.querySelector("#squadSearch");
+    search.focus();
+    search.setSelectionRange(search.value.length, search.value.length);
+  });
+  els.worldView.querySelectorAll("[data-squad-club]").forEach((button) => {
+    button.addEventListener("click", () => {
+      selectedSquadClub = button.dataset.squadClub;
+      renderSquadsView();
+    });
+  });
+}
+
+function squadTableMarkup(clubId) {
+  const roster = squadForClub(clubId)
+    .map((player) => ({
+      ...player,
+      average: player.stats.matches ? (player.stats.ratingPoints / player.stats.matches).toFixed(1) : "0.0",
+      isCareer: false,
+    }));
+  if (clubId === state.career.clubId) {
+    const totals = currentSeasonPlayerStats();
+    roster.push({
+      id: "career-player",
+      name: state.player.name,
+      pos: POSITIONS[state.player.position].label,
+      positions: POSITIONS[state.player.position].lane,
+      age: "-",
+      ovr: getOverall(),
+      pace: state.player.attributes.pace,
+      shooting: state.player.attributes.shooting,
+      passing: state.player.attributes.passing,
+      dribbling: state.player.attributes.dribbling,
+      defending: state.player.attributes.defending,
+      physical: state.player.attributes.stamina,
+      stats: { matches: totals.matches, goals: totals.goals, assists: totals.assists },
+      average: totals.matches ? (totals.ratingPoints / totals.matches).toFixed(1) : "0.0",
+      isCareer: true,
+    });
+  }
+  return `
+    <div class="squad-head">
+      <strong>${getClub(clubId).name}</strong>
+      <span>${roster.length} futbolistas visibles | Poder club ${getClub(clubId).rating}</span>
+    </div>
+    <div class="table-shell">
+      <table class="data-table squad-table">
+        <thead><tr><th>Jugador</th><th>Pos.</th><th>OVR</th><th>Edad</th><th>PJ</th><th>G</th><th>A</th><th>Nota</th><th>Rit</th><th>Tir</th><th>Pas</th><th>Reg</th><th>Def</th><th>Fis</th></tr></thead>
+        <tbody>
+          ${roster.sort((left, right) => right.ovr - left.ovr).map((player) => `
+            <tr class="${player.isCareer ? "player-row" : ""}">
+              <td><strong>${player.name}</strong><small>${player.positions}</small></td>
+              <td>${player.pos}</td><td>${player.ovr}</td><td>${player.age}</td><td>${player.stats.matches}</td><td>${player.stats.goals}</td><td>${player.stats.assists}</td><td>${player.average}</td>
+              <td>${player.pace}</td><td>${player.shooting}</td><td>${player.passing}</td><td>${player.dribbling}</td><td>${player.defending}</td><td>${player.physical}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
 function renderOfferPanel() {
   if (!state.offers) {
     els.offerPanel.classList.add("hidden");
@@ -1345,7 +1480,7 @@ function renderOfferPanel() {
   els.offerTitle.textContent = state.offers.final ? "Legado" : "Mercado de verano";
   els.offerSummary.textContent = state.offers.final
     ? "La carrera de 15 temporadas termino. Puedes revisar tablas, premios y abrir una nueva."
-    : `${state.offers.summary.headline} Tienes tres ofertas mas la opcion de seguir.`;
+    : `${state.offers.summary.headline} Avanza el mercado para ver fichajes y propuestas antes de decidir.`;
   els.offerChoices.innerHTML = "";
   if (state.offers.final) {
     const button = document.createElement("button");
@@ -1356,21 +1491,102 @@ function renderOfferPanel() {
     els.offerChoices.append(button);
     return;
   }
-  els.offerChoices.append(offerButton(getClub(state.career.clubId), "Seguir", () => acceptOffer(state.career.clubId)));
+  const market = state.offers.market;
+  els.offerChoices.innerHTML = `
+    <div class="market-grid">
+      <section class="market-window">
+        <div class="market-clock"><strong>Ventana ${market.interval}/10</strong><span>${market.interval >= 10 ? "Cierre de mercado" : "Rumores y despachos"}</span></div>
+        <button class="pixel-button primary" type="button" data-advance-market ${market.interval >= 10 ? "disabled" : ""}>Adelantar intervalo</button>
+        <p>Las propuestas respetan tu nota, produccion, reputacion y el nivel de tu club actual.</p>
+      </section>
+      <section class="market-feed">
+        <h3>Fichajes</h3>
+        <ol>${market.log.slice(-10).reverse().map((entry) => `<li><strong>${entry.title}</strong><span>${entry.copy}</span></li>`).join("")}</ol>
+      </section>
+    </div>
+    <div class="offer-deck" data-offer-deck></div>
+  `;
+  const deck = els.offerChoices.querySelector("[data-offer-deck]");
+  deck.append(offerButton(getClub(state.career.clubId), "Seguir", () => acceptOffer(state.career.clubId)));
   state.offers.clubs.forEach((clubId) => {
-    els.offerChoices.append(offerButton(getClub(clubId), "Firmar", () => acceptOffer(clubId)));
+    deck.append(offerButton(getClub(clubId), "Firmar", () => acceptOffer(clubId)));
   });
+  els.offerChoices.querySelector("[data-advance-market]").addEventListener("click", advanceMarketWindow);
 }
 
 function acceptOffer(clubId) {
   state.career.season += 1;
   state.career.clubId = clubId;
-  state.world = createWorld(clubId, state.career.season, state.career.lastChampionsQualifiers);
+  state.world = createWorld(clubId, state.career.season, state.career.lastChampionsQualifiers, state.squads);
   state.match = null;
   state.offers = null;
   state.message = `Temporada ${state.career.season}: ${getClub(clubId).name} te entrega uniforme.`;
   saveState();
   renderCareer();
+}
+
+function advanceMarketWindow() {
+  const market = state.offers?.market;
+  if (!market || market.interval >= 10) return;
+  market.interval += 1;
+  simulateNpcTransfers(market);
+  maybeCreateCareerOffer(market);
+  if (market.interval === 10 && !state.offers.clubs.length) {
+    market.log.push({ title: "Agente", copy: "No llego una oferta que supere tu proyecto actual. Seguir es la opcion firme." });
+  }
+  saveState();
+  renderOfferPanel();
+  if (activeWorldTab === "squads") renderWorldView();
+}
+
+function simulateNpcTransfers(market) {
+  const moves = randomInt(1, market.interval % 3 === 0 ? 3 : 2);
+  for (let index = 0; index < moves; index += 1) {
+    const transfer = pickNpcTransfer(market.movedIds);
+    if (!transfer) return;
+    moveSquadPlayer(transfer.player, transfer.to.id);
+    market.movedIds.push(transfer.player.id);
+    const copy = `${displayPlayerName(transfer.player.name)} sale de ${transfer.from.short} y firma por ${transfer.to.short}.`;
+    market.log.push({ title: `${transfer.from.short} -> ${transfer.to.short}`, copy });
+    state.career.transferLog.push({ season: state.career.season, playerId: transfer.player.id, name: transfer.player.name, fromId: transfer.from.id, toId: transfer.to.id });
+  }
+  state.career.transferLog = state.career.transferLog.slice(-120);
+}
+
+function pickNpcTransfer(movedIds) {
+  const transferable = shuffle(allSquadPlayers().filter((player) => !movedIds.includes(player.id) && squadForClub(player.clubId).length > 9 && player.ovr >= 67))
+    .sort((left, right) => right.market * Math.random() - left.market * Math.random())
+    .slice(0, 90);
+  for (const player of transferable) {
+    const from = getClub(player.clubId);
+    const destinations = CLUBS.filter((clubData) => {
+      if (clubData.id === from.id) return false;
+      if (player.ovr >= 86) return clubData.rating >= Math.max(82, from.rating - 5, player.ovr - 8);
+      return clubData.rating >= from.rating - 8 && clubData.rating <= from.rating + 12;
+    });
+    if (!destinations.length) continue;
+    const to = shuffle(destinations)
+      .sort((left, right) => Math.abs(left.rating - player.ovr) - Math.abs(right.rating - player.ovr))[0];
+    return { player, from, to };
+  }
+  return null;
+}
+
+function moveSquadPlayer(player, destinationId) {
+  state.squads[player.clubId] = squadForClub(player.clubId).filter((candidate) => candidate.id !== player.id);
+  player.clubId = destinationId;
+  state.squads[destinationId].push(player);
+}
+
+function maybeCreateCareerOffer(market) {
+  const summary = state.offers.summary;
+  const output = summary.average * 9 + summary.stats.goals * 0.7 + summary.stats.assists * 0.55 + Math.max(0, 18 - summary.rank) + state.career.reputation * 0.45;
+  const invitation = output + randomInt(0, 38) >= 92 || market.interval >= 9 && output >= 68;
+  if (!invitation || state.offers.clubs.length >= 3) return;
+  const [clubId] = offerSelection(summary, state.offers.clubs, 1);
+  if (!clubId) return;
+  state.offers.clubs.push(clubId);
+  market.log.push({ title: "Propuesta", copy: `${getClub(clubId).name} pregunta por ${state.player.name}.` });
 }
 
 function renderDossier() {
@@ -1472,34 +1688,66 @@ function simulateScore(homeId, awayId, type, dampener = 1) {
   return { homeGoals: poisson(homePower), awayGoals: poisson(awayPower) };
 }
 
-function seedLeaders(leagueId) {
+function seedLeaders(leagueId, squads = state?.squads) {
   return {
-    goals: Object.fromEntries(STAR_PLAYERS.filter((player) => getClub(player.clubId).league === leagueId).map((player) => [player.id, leader(player)])),
-    assists: Object.fromEntries(STAR_PLAYERS.filter((player) => getClub(player.clubId).league === leagueId).map((player) => [player.id, leader(player)])),
+    goals: Object.fromEntries(playersFromSquads(squads).filter((player) => getClub(player.clubId).league === leagueId).map((player) => [player.id, leader(player)])),
+    assists: Object.fromEntries(playersFromSquads(squads).filter((player) => getClub(player.clubId).league === leagueId).map((player) => [player.id, leader(player)])),
   };
 }
 
 function leader(player) {
-  return { id: player.id, name: player.name, clubId: player.clubId, ability: player.ability, value: 0, isPlayer: false };
+  return { id: player.id, name: player.name, clubId: player.clubId, ability: player.ability || player.ovr, value: 0, isPlayer: false };
 }
 
 function seedScorersFromMatch(homeId, awayId, homeGoals, awayGoals, leaders, skipPlayerClub = false) {
-  awardStarOutput(homeId, homeGoals, leaders, "goals", skipPlayerClub);
-  awardStarOutput(awayId, awayGoals, leaders, "goals", skipPlayerClub);
-  awardStarOutput(homeId, Math.max(0, homeGoals - (Math.random() < 0.18 ? 1 : 0)), leaders, "assists", skipPlayerClub);
-  awardStarOutput(awayId, Math.max(0, awayGoals - (Math.random() < 0.18 ? 1 : 0)), leaders, "assists", skipPlayerClub);
+  recordSquadAppearances(homeId);
+  recordSquadAppearances(awayId);
+  awardSquadOutput(homeId, homeGoals, leaders, "goals", skipPlayerClub);
+  awardSquadOutput(awayId, awayGoals, leaders, "goals", skipPlayerClub);
+  awardSquadOutput(homeId, Math.max(0, homeGoals - (Math.random() < 0.18 ? 1 : 0)), leaders, "assists", skipPlayerClub);
+  awardSquadOutput(awayId, Math.max(0, awayGoals - (Math.random() < 0.18 ? 1 : 0)), leaders, "assists", skipPlayerClub);
 }
 
-function awardStarOutput(clubId, amount, leaders, type, skipPlayerClub) {
+function recordLiveMatchOutputs(leaders) {
+  recordSquadAppearances(state.match.homeId);
+  recordSquadAppearances(state.match.awayId);
+  addLiveScorersToLeaders(state.career.clubId, state.match.scorers.for, leaders);
+  addLiveScorersToLeaders(state.match.opponentId, state.match.scorers.against, leaders);
+}
+
+function addLiveScorersToLeaders(clubId, scorers, leaders) {
+  scorers.forEach((entry) => {
+    const scorer = squadForClub(clubId).find((player) => player.name === entry.name);
+    const assister = squadForClub(clubId).find((player) => player.name === entry.assist);
+    if (scorer) {
+      leaders.goals[scorer.id] ||= leader(scorer);
+      leaders.goals[scorer.id].value += 1;
+    }
+    if (assister) {
+      leaders.assists[assister.id] ||= leader(assister);
+      leaders.assists[assister.id].value += 1;
+    }
+  });
+}
+
+function recordSquadAppearances(clubId) {
+  squadForClub(clubId).forEach((player) => {
+    player.stats.matches += 1;
+    player.stats.ratingPoints += Number((clamp(5.7 + player.ovr / 55 + Math.random() * 0.85, 5.8, 8.7)).toFixed(1));
+  });
+}
+
+function awardSquadOutput(clubId, amount, leaders, type, skipPlayerClub) {
   if (!amount) return;
   if (skipPlayerClub && clubId === state.career.clubId) return;
-  const candidates = STAR_PLAYERS.filter((player) => player.clubId === clubId);
+  const candidates = squadForClub(clubId);
   for (let index = 0; index < amount; index += 1) {
     const player = weightedPick(candidates, type === "goals" ? "scoring" : "assisting");
     if (!player) continue;
     const bucket = leaders[type];
     bucket[player.id] ||= leader(player);
     bucket[player.id].value += 1;
+    player.stats[type] += 1;
   }
 }
 
@@ -1572,23 +1820,25 @@ function selectChampionsQualifiers() {
     .map((row) => row.clubId);
 }
 
-function offerSelection(summary) {
+function offerSelection(summary, excluded = [], count = 3) {
   const current = getClub(state.career.clubId);
-  const ceiling = clamp(current.rating + state.career.reputation / 2 + summary.repGain + (summary.rank <= 4 ? 4 : 0), 70, 96);
+  const seasonLift = summary.average >= 7.5 ? 8 : summary.average >= 6.8 ? 4 : -2;
+  const ceiling = clamp(current.rating + state.career.reputation / 2 + summary.repGain + seasonLift + (summary.rank <= 4 ? 4 : 0), 70, 96);
   const floor = Math.max(66, current.rating - 5);
-  return uniqueClubs(shuffle(CLUBS.filter((candidate) => candidate.id !== current.id && candidate.rating >= floor && candidate.rating <= ceiling)))
-    .sort((a, b) => Math.abs(b.rating - current.rating) - Math.abs(a.rating - current.rating))
-    .slice(0, 3)
+  const target = clamp(current.rating + summary.repGain / 2 + seasonLift / 2, floor, ceiling);
+  return uniqueClubs(shuffle(CLUBS.filter((candidate) => candidate.id !== current.id && !excluded.includes(candidate.id) && candidate.rating >= floor && candidate.rating <= ceiling)))
+    .sort((a, b) => Math.abs(a.rating - target) - Math.abs(b.rating - target))
+    .slice(0, count)
     .map((candidate) => candidate.id);
 }
 
 function buildBallonDor(summary) {
   const clubRankings = Object.fromEntries(LEAGUES.flatMap((league) => sortedRows(state.world.leagues[league.id].table).map((row, index) => [row.clubId, index + 1])));
-  const candidates = STAR_PLAYERS.map((player) => {
+  const candidates = allSquadPlayers().map((player) => {
     const goals = state.world.leagues[getClub(player.clubId).league].leaders.goals[player.id]?.value || Math.round(player.scoring * 20);
     const assists = state.world.leagues[getClub(player.clubId).league].leaders.assists[player.id]?.value || Math.round(player.assisting * 18);
     const rank = clubRankings[player.clubId] || 12;
-    const score = player.ability * 0.9 + goals * 2.4 + assists * 1.7 + Math.max(0, 18 - rank) + (state.world.champions?.championId === player.clubId ? 18 : 0);
+    const score = player.ovr * 0.9 + goals * 2.4 + assists * 1.7 + Math.max(0, 18 - rank) + (state.world.champions?.championId === player.clubId ? 18 : 0);
     return { name: player.name, clubId: player.clubId, goals, assists, score, isPlayer: false };
   });
   const playerScore = getOverall() + summary.stats.goals * 2.8 + summary.stats.assists * 2 + Math.max(0, 22 - summary.rank) + summary.average * 4 + (summary.championsChampion ? 24 : 0);
@@ -1722,7 +1972,6 @@ function awardDevelopment(attribute, minute) {
   const copy = `${ATTRIBUTE_LABELS[attribute]} sube a ${state.player.attributes[attribute]} tras superar d20 al ${formatMinute(minute)}'.`;
   state.career.growthLog.push({ label, copy, season: state.career.season });
   state.career.growthLog = state.career.growthLog.slice(-24);
-  pushMatchFeed(minute, copy, "growth");
 }
 
 function emptyDevelopment() {
@@ -1751,6 +2000,18 @@ function highlightCount(opponentId, type) {
 
 function trackedStats() {
   return ["goals", "assists", "keyPasses", "tackles", "blocks", "clearances", "presses", "commands", "controls", "buildUps", "cornersWon", "saves", "decisions", "successes"];
+}
+
+function playersFromSquads(squads) {
+  return Object.values(squads || {}).flat();
+}
+
+function allSquadPlayers() {
+  return playersFromSquads(state.squads);
+}
+
+function squadForClub(clubId) {
+  return state?.squads?.[clubId] || [];
 }
 
 function statModifier(attribute) {
@@ -1954,6 +2215,8 @@ function resetCareer() {
   localStorage.removeItem(STORAGE_KEY);
   state = null;
   setup = createSetupState();
+  selectedSquadClub = null;
+  squadSearch = "";
   els.playerName.value = "Canterano";
   renderHairStyles();
   renderSkins();
@@ -1967,21 +2230,47 @@ function normalizeState() {
   state.career.awards ||= [];
   state.career.lastChampionsQualifiers ||= [];
   state.career.growthLog ||= [];
+  state.career.transferLog ||= [];
   state.player.hairStyle ||= "crop";
   state.player.hairColor ||= "#111827";
   state.player.bootColor ||= "#facc15";
   state.player.development = { ...emptyDevelopment(), ...state.player.development };
   state.player.attributes = { ...POSITIONS[state.player.position].base, ...state.player.attributes };
+  normalizeSquads();
   if (state.match && typeof state.match.clock !== "number") state.match = null;
+  if (state.offers && !state.offers.final && !state.offers.market) {
+    state.offers.market = {
+      interval: 10,
+      movedIds: [],
+      log: [{ title: "Mercado heredado", copy: "Tus ofertas previas siguen disponibles en la nueva ventana." }],
+    };
+  }
   Object.values(state.world.leagues).forEach((league) => league.playerResults ||= []);
   selectedStatsLeague ||= getClub(state.career.clubId).league;
   selectedTableLeague ||= getClub(state.career.clubId).league;
+}
+
+function normalizeSquads() {
+  if (!state.squads) {
+    state.squads = createSquads();
+    return;
+  }
+  CLUBS.forEach((clubData) => {
+    state.squads[clubData.id] = (state.squads[clubData.id] || []).map((player) => ensureSquadPlayer(player, clubData.id));
+  });
+}
+
+function ensureSquadPlayer(player, clubId) {
+  const hydrated = hydrateSquadPlayer(player, clubId);
+  return { ...hydrated, ...player, clubId, stats: { ...hydrated.stats, ...player.stats } };
 }
 
 function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
 function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (error) { return null; } }
 function cleanName(value) { return (value || "Canterano").replace(/[<>]/g, "").trim().slice(0, 18) || "Canterano"; }
 function slug(value) { return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
+function escapeHtml(value) { return String(value || "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[char])); }
+function displayPlayerName(name) { const parts = String(name).split(/\s+/).filter(Boolean); return name.length > 28 && parts.length > 1 ? `${parts[0]} ${parts.at(-1)}` : name; }
 function signed(value) { return value >= 0 ? `+${value}` : `${value}`; }
 function formatMinute(value) { return String(Math.max(0, Math.floor(Number(value) || 0))).padStart(2, "0"); }
 function uniqueClubs(items) { const seen = new Set(); return items.filter((item) => seen.has(item.id) ? false : (seen.add(item.id), true)); }
