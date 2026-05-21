@@ -59,6 +59,21 @@
               <div id="skinChoices" class="swatch-row skin-row"></div>
             </fieldset>
 
+            <div class="look-grid">
+              <label>
+                Pelo
+                <select id="hairStyle" class="pixel-select"></select>
+              </label>
+              <label>
+                Color pelo
+                <input id="hairColor" type="color" value="#111827" />
+              </label>
+              <label>
+                Botas
+                <input id="bootColor" type="color" value="#facc15" />
+              </label>
+            </div>
+
             <fieldset>
               <legend>Posicion</legend>
               <div id="positionChoices" class="position-grid"></div>
@@ -76,6 +91,7 @@
               height="208"
               aria-label="Vista previa del jugador"
             ></canvas>
+            <strong id="previewName" class="preview-name">Canterano</strong>
             <div id="starterStats" class="starter-stats"></div>
           </section>
 
@@ -106,7 +122,7 @@
               <span id="seasonStatus" class="tag">En curso</span>
             </div>
             <div id="seasonRoute" class="season-route"></div>
-            <div id="trainingDock" class="training-dock"></div>
+            <div id="growthDock" class="growth-dock"></div>
           </section>
 
           <section class="panel match-panel">
@@ -114,12 +130,7 @@
               <h2>Partido</h2>
               <span id="matchBadge" class="tag">Highlights</span>
             </div>
-            <canvas
-              id="matchCanvas"
-              width="520"
-              height="300"
-              aria-label="Cancha del partido"
-            ></canvas>
+            <div id="matchOverlay" class="match-overlay" aria-live="polite"></div>
             <div id="matchStory" class="match-story"></div>
             <div id="matchActions" class="match-actions"></div>
           </section>
@@ -129,6 +140,13 @@
               <h2>Dossier</h2>
               <span id="overallBadge" class="tag">OVR</span>
             </div>
+            <canvas
+              id="dossierPlayer"
+              width="176"
+              height="208"
+              aria-label="Jugador pixel en el dossier"
+            ></canvas>
+            <div id="dossierLook" class="dossier-look"></div>
             <div id="attributeGrid" class="attribute-grid"></div>
             <div id="careerTotals" class="career-totals"></div>
           </section>

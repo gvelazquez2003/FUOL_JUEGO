@@ -153,6 +153,24 @@ const SKINS = [
   { id: "skin-4", label: "Marfil", color: "#ffdbac", shadow: "#c28b5b" },
 ];
 
+const HAIR_STYLES = [
+  hair("buzz", "Rapado"),
+  hair("crop", "Corto recto"),
+  hair("fade", "Fade alto"),
+  hair("side", "Peinado lateral"),
+  hair("wave", "Ondas"),
+  hair("curly", "Rizos"),
+  hair("afro", "Afro"),
+  hair("mohawk", "Mohicano"),
+  hair("ponytail", "Coleta"),
+  hair("bun", "Mono"),
+  hair("fringe", "Flequillo"),
+  hair("spikes", "Puntas"),
+  hair("braids", "Trenzas"),
+  hair("locs", "Locs"),
+  hair("long", "Largo"),
+];
+
 const ATTRIBUTES = ["pace", "shooting", "passing", "dribbling", "defending", "reflexes", "stamina", "composure"];
 const ATTRIBUTE_LABELS = {
   pace: "Ritmo",
@@ -172,13 +190,6 @@ const POSITIONS = {
   wing: position("Extremo", "Banda", "Desborde y centros al area.", { pace: 69, shooting: 56, passing: 59, dribbling: 68, defending: 39, reflexes: 45, stamina: 62, composure: 57 }, ["pace", "dribbling", "passing"]),
   st: position("Delantero", "Area", "Gol, ruptura y sangre fria.", { pace: 65, shooting: 68, passing: 47, dribbling: 61, defending: 34, reflexes: 43, stamina: 60, composure: 63 }, ["shooting", "composure", "pace"]),
 };
-
-const TRAINING_DRILLS = [
-  drill("finishing", "Definicion", "+1 Remate, +1 Temple", { shooting: 1, composure: 1 }),
-  drill("rondo", "Rondo", "+1 Pase, +1 Regate", { passing: 1, dribbling: 1 }),
-  drill("sprints", "Series", "+1 Ritmo, +1 Fisico", { pace: 1, stamina: 1 }),
-  drill("duels", "Duelos", "+1 Marca, +1 Reflejos", { defending: 1, reflexes: 1 }),
-];
 
 const HIGHLIGHTS = {
   gk: [
@@ -308,21 +319,27 @@ const els = {
   careerScreen: document.querySelector("#careerScreen"),
   playerForm: document.querySelector("#playerForm"),
   playerName: document.querySelector("#playerName"),
+  hairStyle: document.querySelector("#hairStyle"),
+  hairColor: document.querySelector("#hairColor"),
+  bootColor: document.querySelector("#bootColor"),
   skinChoices: document.querySelector("#skinChoices"),
   positionChoices: document.querySelector("#positionChoices"),
   positionHint: document.querySelector("#positionHint"),
   playerPreview: document.querySelector("#playerPreview"),
+  previewName: document.querySelector("#previewName"),
   starterStats: document.querySelector("#starterStats"),
   starterClubs: document.querySelector("#starterClubs"),
   careerHud: document.querySelector("#careerHud"),
   seasonTitle: document.querySelector("#seasonTitle"),
   seasonStatus: document.querySelector("#seasonStatus"),
   seasonRoute: document.querySelector("#seasonRoute"),
-  trainingDock: document.querySelector("#trainingDock"),
+  growthDock: document.querySelector("#growthDock"),
   matchBadge: document.querySelector("#matchBadge"),
-  matchCanvas: document.querySelector("#matchCanvas"),
+  matchOverlay: document.querySelector("#matchOverlay"),
   matchStory: document.querySelector("#matchStory"),
   matchActions: document.querySelector("#matchActions"),
+  dossierPlayer: document.querySelector("#dossierPlayer"),
+  dossierLook: document.querySelector("#dossierLook"),
   overallBadge: document.querySelector("#overallBadge"),
   attributeGrid: document.querySelector("#attributeGrid"),
   careerTotals: document.querySelector("#careerTotals"),
@@ -350,6 +367,7 @@ let activeAtlasLeague = LEAGUES[0].id;
 let activeWorldTab = "my-table";
 let selectedStatsLeague = null;
 let selectedTableLeague = null;
+let matchTimer = null;
 
 boot();
 
@@ -369,6 +387,10 @@ function drill(id, title, note, gains) {
   return { id, title, note, gains };
 }
 
+function hair(id, label) {
+  return { id, label };
+}
+
 function scenario(title, copy, options) {
   return { title, copy, options };
 }
@@ -379,6 +401,7 @@ function option(label, stat, dc, reward, success) {
 
 function boot() {
   bindEvents();
+  renderHairStyles();
   renderSkins();
   renderPositions();
   renderAtlas();
@@ -394,6 +417,9 @@ function boot() {
 function bindEvents() {
   els.playerForm.addEventListener("submit", startCareer);
   els.playerName.addEventListener("input", drawPlayerPreview);
+  els.hairStyle.addEventListener("change", updateSetupLook);
+  els.hairColor.addEventListener("input", updateSetupLook);
+  els.bootColor.addEventListener("input", updateSetupLook);
   els.openAtlasButton.addEventListener("click", () => els.clubAtlas.showModal());
   els.closeAtlasButton.addEventListener("click", () => els.clubAtlas.close());
   els.closeAwardButton.addEventListener("click", () => els.awardDialog.close());
@@ -402,15 +428,31 @@ function bindEvents() {
 
 function createSetupState() {
   const starters = starterSelection();
-  return { skin: SKINS[2].id, position: "st", starters, starterClub: starters[0] };
+  return {
+    skin: SKINS[2].id,
+    position: "st",
+    hairStyle: "crop",
+    hairColor: "#111827",
+    bootColor: "#facc15",
+    starters,
+    starterClub: starters[0],
+  };
 }
 
 function renderSetup() {
   els.setupScreen.classList.remove("hidden");
   els.careerScreen.classList.add("hidden");
+  els.hairStyle.value = setup.hairStyle;
+  els.hairColor.value = setup.hairColor;
+  els.bootColor.value = setup.bootColor;
   renderStarterClubs();
   renderStarterStats();
   drawPlayerPreview();
+}
+
+function renderHairStyles() {
+  els.hairStyle.innerHTML = HAIR_STYLES.map((style) => `<option value="${style.id}">${style.label}</option>`).join("");
+  els.hairStyle.value = setup.hairStyle;
 }
 
 function renderSkins() {
@@ -428,6 +470,13 @@ function renderSkins() {
     });
     els.skinChoices.append(button);
   });
+}
+
+function updateSetupLook() {
+  setup.hairStyle = els.hairStyle.value;
+  setup.hairColor = els.hairColor.value;
+  setup.bootColor = els.bootColor.value;
+  drawPlayerPreview();
 }
 
 function renderPositions() {
@@ -476,6 +525,10 @@ function startCareer(event) {
       name: cleanName(els.playerName.value),
       skin: setup.skin,
       position: setup.position,
+      hairStyle: setup.hairStyle,
+      hairColor: setup.hairColor,
+      bootColor: setup.bootColor,
+      development: emptyDevelopment(),
       attributes: structuredClone(POSITIONS[setup.position].base),
     },
     career: {
@@ -487,7 +540,7 @@ function startCareer(event) {
       history: [],
       awards: [],
       lastChampionsQualifiers: [],
-      trainingUsed: false,
+      growthLog: [],
     },
     world: createWorld(firstClubId, 1, []),
     match: null,
@@ -548,7 +601,7 @@ function renderCareer() {
   els.careerScreen.classList.remove("hidden");
   renderHud();
   renderRoute();
-  renderTraining();
+  renderGrowthDock();
   renderDossier();
   renderMatchPanel();
   renderWorldTabs();
@@ -616,39 +669,20 @@ function renderRoute() {
   }
 }
 
-function renderTraining() {
-  els.trainingDock.innerHTML = "";
+function renderGrowthDock() {
+  els.growthDock.innerHTML = "";
   if (state.offers) {
-    els.trainingDock.innerHTML = "<p>El ano ya cerro. Mira las tablas y el mercado antes del siguiente contrato.</p>";
+    els.growthDock.innerHTML = "<p class=\"growth-note\">El ano ya cerro. Las mejoras del jugador quedan guardadas en el dossier.</p>";
     return;
   }
-  const intro = document.createElement("p");
-  intro.textContent = state.career.trainingUsed || state.match
-    ? "El microciclo de esta fecha ya esta cerrado."
-    : "Un microciclo por fecha. Mejora poco, pero cada jornada pesa.";
-  els.trainingDock.append(intro);
-  const dock = document.createElement("div");
-  dock.className = "training-options";
-  TRAINING_DRILLS.forEach((training) => {
-    const button = document.createElement("button");
-    button.className = "training-button";
-    button.type = "button";
-    button.disabled = state.career.trainingUsed || Boolean(state.match);
-    button.innerHTML = `<strong>${training.title}</strong><small>${training.note}</small>`;
-    button.addEventListener("click", () => train(training));
-    dock.append(button);
-  });
-  els.trainingDock.append(dock);
-}
-
-function train(training) {
-  Object.entries(training.gains).forEach(([attribute, gain]) => {
-    state.player.attributes[attribute] = clamp(state.player.attributes[attribute] + gain, 25, 99);
-  });
-  state.career.trainingUsed = true;
-  state.message = `${training.title}: mejoras pequenas antes de una fecha larga.`;
-  saveState();
-  renderCareer();
+  const recent = state.career.growthLog.slice(-3).reverse();
+  els.growthDock.innerHTML = `
+    <div class="growth-note">
+      <strong>Desarrollo automatico</strong>
+      <p>Los atributos suben al superar d20 durante partidos. Cada mejora aparece en el reloj y aqui.</p>
+    </div>
+    ${recent.map((entry) => `<div class="growth-note"><strong>${entry.label}</strong><small>${entry.copy}</small></div>`).join("")}
+  `;
 }
 
 function renderMatchPanel() {
@@ -657,7 +691,7 @@ function renderMatchPanel() {
     els.matchBadge.textContent = "Cierre";
     els.matchStory.innerHTML = `<strong>Temporada completada</strong><p>${state.message}</p>`;
     els.matchActions.innerHTML = "";
-    drawMatchField(null, null);
+    renderClosedOverlay();
     return;
   }
   if (!state.match) {
@@ -666,63 +700,60 @@ function renderMatchPanel() {
     els.matchStory.innerHTML = `
       <strong>${getClub(state.career.clubId).short} vs ${rival.short}</strong>
       <p>${event.copy}</p>
-      <p>${state.message || "Tus decisiones pasan por dados, stats y nivel del rival."}</p>
+      <p>${state.message || "Los d20 se resolveran en segundo plano durante el reloj."}</p>
     `;
     els.matchActions.innerHTML = "";
     const button = document.createElement("button");
     button.className = "pixel-button primary";
     button.type = "button";
-    button.textContent = "Jugar partido";
+    button.textContent = "Simular partido";
     button.addEventListener("click", beginMatch);
     els.matchActions.append(button);
-    drawMatchField(null, rival);
+    renderFixtureOverlay(event, rival);
     return;
   }
 
-  const highlight = state.match.highlights[state.match.step];
-  els.matchBadge.textContent = `D20 ${state.match.step + 1}/${state.match.highlights.length}`;
+  els.matchBadge.textContent = `${formatMinute(state.match.clock)}'`;
   els.matchStory.innerHTML = `
-    <strong>${highlight.title}</strong>
-    <p>${highlight.copy}</p>
-    <p>Marcador live: ${state.match.scoreFor}-${state.match.scoreAgainst}</p>
+    <strong>${state.match.narration.title}</strong>
+    <p>${state.match.narration.copy}</p>
     ${state.match.lastRoll ? rollMarkup(state.match.lastRoll) : ""}
   `;
-  els.matchActions.innerHTML = "";
-  highlight.options.forEach((choice) => {
-    const odds = previewRoll(choice);
-    const button = document.createElement("button");
-    button.className = "action-button";
-    button.type = "button";
-    button.innerHTML = `
-      <strong>${choice.label}</strong>
-      <small>D20 ${signed(odds.modifier)} vs DC ${odds.dc} | exito ${odds.chance}%</small>
-    `;
-    button.addEventListener("click", () => resolveHighlight(choice));
-    els.matchActions.append(button);
-  });
-  drawMatchField(highlight, getClub(state.match.opponentId));
+  els.matchActions.innerHTML = "<div class=\"growth-note\">La simulacion corre sola. Cambia velocidad desde el marcador.</div>";
+  renderLiveOverlay();
 }
 
 function beginMatch() {
   const event = currentEvent();
   const context = event.type === "league" ? event.fixture : { home: state.career.clubId, away: event.opponentId };
   const baseline = simulateScore(context.home, context.away, event.type, 0.62);
+  const highlights = buildHighlights(state.player.position, event.opponentId, event.type);
   state.match = {
     type: event.type,
     roundIndex: event.index,
     opponentId: event.opponentId,
     homeId: context.home,
     awayId: context.away,
-    scoreFor: context.home === state.career.clubId ? baseline.homeGoals : baseline.awayGoals,
-    scoreAgainst: context.home === state.career.clubId ? baseline.awayGoals : baseline.homeGoals,
-    highlights: buildHighlights(state.player.position, event.opponentId, event.type),
+    scoreFor: 0,
+    scoreAgainst: 0,
+    scorers: { for: [], against: [] },
+    clock: 0,
+    speed: 1,
+    targetMinutes: 90,
+    extraTime: false,
+    highlights,
+    events: buildMatchTimeline(highlights, baseline, context),
+    processedEvents: [],
+    feed: [{ minute: 0, text: "Pitazo inicial. Los d20 quedan en manos del simulador." }],
     step: 0,
     stats: emptyMatchStats(),
     lastRoll: null,
+    narration: { title: "Partido en vivo", copy: "El reloj corre y los eventos aparecen cuando la jugada te alcanza." },
   };
-  state.message = "El partido abre sus dos ventanas decisivas.";
+  state.message = "La simulacion ya esta en marcha.";
   saveState();
   renderCareer();
+  startMatchTimer();
 }
 
 function previewRoll(choice) {
@@ -736,45 +767,41 @@ function previewRoll(choice) {
   return { modifier, dc, chance };
 }
 
-function resolveHighlight(choice) {
+function resolveBackgroundHighlight(highlight, minute) {
+  const choice = autoSelectOption(highlight);
   const odds = previewRoll(choice);
   const die = randomInt(1, 20);
   const total = die + odds.modifier;
   const success = die === 20 || (die !== 1 && total >= odds.dc);
-  const highlight = state.match.highlights[state.match.step];
-  state.match.lastRoll = { die, total, dc: odds.dc, modifier: odds.modifier, success, stat: choice.stat };
+  state.match.lastRoll = { die, total, dc: odds.dc, modifier: odds.modifier, success, stat: choice.stat, minute };
   state.match.stats.decisions += 1;
+  state.match.narration = { title: highlight.title, copy: `${highlight.copy} ${choice.label}.` };
   if (success) {
-    applyReward(choice.reward);
+    applyReward(choice.reward, minute);
     state.match.stats.successes += 1;
-    state.message = choice.success;
+    awardDevelopment(choice.stat, minute);
+    pushMatchFeed(minute, `${choice.success} d20 ${die}${signed(odds.modifier)} supera DC ${odds.dc}.`);
   } else {
-    applyFailure(choice.reward);
-    state.message = `${highlight.title}: el rival supera tu tirada.`;
+    applyFailure(choice.reward, minute);
+    pushMatchFeed(minute, `${highlight.title}: d20 ${die}${signed(odds.modifier)} no llega a DC ${odds.dc}.`);
   }
   state.match.step += 1;
-  if (state.match.step >= state.match.highlights.length) {
-    finishPlayerMatch();
-    return;
-  }
-  saveState();
-  renderCareer();
 }
 
-function applyReward(reward) {
+function applyReward(reward, minute) {
   const stats = state.match.stats;
   stats.rating += 0.48;
   if (reward === "goal") {
     stats.goals += 1;
-    state.match.scoreFor += 1;
+    scoreGoal(state.career.clubId, state.player.name, minute);
   }
   if (reward === "assist") {
     stats.assists += 1;
-    if (Math.random() < 0.76) state.match.scoreFor += 1;
+    if (Math.random() < 0.76) scoreGoal(state.career.clubId, assistedScorer(), minute, state.player.name);
   }
   if (reward === "keyPass") {
     stats.keyPasses += 1;
-    if (Math.random() < 0.22) state.match.scoreFor += 1;
+    if (Math.random() < 0.22) scoreGoal(state.career.clubId, assistedScorer(), minute, state.player.name);
   }
   if (reward === "tackle") stats.tackles += 1;
   if (reward === "block") stats.blocks += 1;
@@ -788,23 +815,266 @@ function applyReward(reward) {
   }
   if (reward === "corner") {
     stats.cornersWon += 1;
-    if (Math.random() < 0.16) state.match.scoreFor += 1;
+    if (Math.random() < 0.16) scoreGoal(state.career.clubId, assistedScorer(), minute, "Corner forzado");
   }
   if (reward === "save") stats.saves += 1;
   if (reward === "counter") {
     stats.saves += 1;
     stats.keyPasses += 1;
-    if (Math.random() < 0.18) state.match.scoreFor += 1;
+    if (Math.random() < 0.18) scoreGoal(state.career.clubId, assistedScorer(), minute, state.player.name);
   }
 }
 
-function applyFailure(reward) {
+function applyFailure(reward, minute) {
   state.match.stats.rating -= 0.36;
   const defensive = ["gk", "def"].includes(state.player.position) || ["save", "tackle"].includes(reward);
-  if (defensive && Math.random() < 0.42) state.match.scoreAgainst += 1;
+  if (defensive && Math.random() < 0.42) scoreGoal(state.match.opponentId, goalScorerName(state.match.opponentId), minute);
+}
+
+function buildMatchTimeline(highlights, baseline, context) {
+  const highlightMoments = eventMinutes(highlights.length, 9, 87);
+  const events = highlights.map((highlight, index) => ({
+    id: `roll-${index}`,
+    kind: "highlight",
+    minute: highlightMoments[index],
+    highlight,
+  }));
+  const homeMoments = eventMinutes(baseline.homeGoals, 6, 88);
+  const awayMoments = eventMinutes(baseline.awayGoals, 6, 88);
+  homeMoments.forEach((minute, index) => {
+    events.push({ id: `home-goal-${index}`, kind: "goal", minute, clubId: context.home, scorer: goalScorerName(context.home) });
+  });
+  awayMoments.forEach((minute, index) => {
+    events.push({ id: `away-goal-${index}`, kind: "goal", minute, clubId: context.away, scorer: goalScorerName(context.away) });
+  });
+  return events.sort((a, b) => a.minute - b.minute || a.kind.localeCompare(b.kind));
+}
+
+function eventMinutes(count, min, max) {
+  const minutes = new Set();
+  while (minutes.size < count) minutes.add(randomInt(min, max));
+  return [...minutes].sort((a, b) => a - b);
+}
+
+function autoSelectOption(highlight) {
+  const options = highlight.options.map((choice) => ({ choice, weight: previewRoll(choice).chance + randomInt(0, 18) }));
+  const total = options.reduce((sum, item) => sum + item.weight, 0);
+  let cursor = Math.random() * total;
+  for (const optionData of options) {
+    cursor -= optionData.weight;
+    if (cursor <= 0) return optionData.choice;
+  }
+  return options.at(-1).choice;
+}
+
+function startMatchTimer() {
+  if (matchTimer || !state?.match) return;
+  matchTimer = window.setInterval(tickMatchClock, 1000);
+}
+
+function stopMatchTimer() {
+  if (!matchTimer) return;
+  window.clearInterval(matchTimer);
+  matchTimer = null;
+}
+
+function tickMatchClock() {
+  if (!state?.match) {
+    stopMatchTimer();
+    return;
+  }
+  const match = state.match;
+  match.clock = Math.min(match.targetMinutes, Number((match.clock + match.speed).toFixed(1)));
+  processTimelineEvents(Math.floor(match.clock));
+  if (match.clock >= match.targetMinutes) {
+    if (shouldExtendMatch()) {
+      extendMatchToExtraTime();
+    } else {
+      stopMatchTimer();
+      finishPlayerMatch();
+      return;
+    }
+  }
+  saveState();
+  renderMatchPanel();
+  renderDossier();
+  renderGrowthDock();
+}
+
+function processTimelineEvents(minute) {
+  state.match.events.filter((event) => !event.done && event.minute <= minute).forEach((event) => {
+    event.done = true;
+    if (event.kind === "goal") {
+      scoreGoal(event.clubId, event.scorer, event.minute);
+      return;
+    }
+    resolveBackgroundHighlight(event.highlight, event.minute);
+  });
+}
+
+function shouldExtendMatch() {
+  return state.match.type === "champions"
+    && !state.match.extraTime
+    && state.match.targetMinutes === 90
+    && state.match.scoreFor === state.match.scoreAgainst;
+}
+
+function extendMatchToExtraTime() {
+  state.match.extraTime = true;
+  state.match.targetMinutes = 120;
+  pushMatchFeed(90, "Empate europeo: el partido entra a prorroga.");
+  if (Math.random() < 0.66) {
+    const stronger = Math.random() < matchWinWeight(state.career.clubId, state.match.opponentId)
+      ? state.career.clubId
+      : state.match.opponentId;
+    state.match.events.push({
+      id: "extra-time-goal",
+      kind: "goal",
+      minute: randomInt(101, 118),
+      clubId: stronger,
+      scorer: goalScorerName(stronger),
+    });
+    state.match.events.sort((a, b) => a.minute - b.minute);
+  }
+  state.match.narration = { title: "Prorroga", copy: "El reloj se estira a 120 minutos por el empate europeo." };
+}
+
+function setMatchSpeed(speed) {
+  if (!state?.match) return;
+  state.match.speed = Number(speed);
+  saveState();
+  renderMatchPanel();
+}
+
+function scoreGoal(clubId, scorer, minute, assist = "") {
+  const forPlayer = clubId === state.career.clubId;
+  const side = forPlayer ? "for" : "against";
+  state.match[forPlayer ? "scoreFor" : "scoreAgainst"] += 1;
+  state.match.scorers[side].push({ name: scorer, minute, assist });
+  const assistCopy = assist ? `, asistencia ${assist}` : "";
+  pushMatchFeed(minute, `Gol ${getClub(clubId).short}: ${scorer}${assistCopy}.`);
+}
+
+function pushMatchFeed(minute, text, tone = "info") {
+  state.match.feed.push({ minute, text, tone });
+  state.match.feed = state.match.feed.slice(-10);
+}
+
+function assistedScorer() {
+  const candidates = STAR_PLAYERS.filter((player) => player.clubId === state.career.clubId && player.name !== state.player.name);
+  return candidates.length ? weightedPick(candidates, "scoring").name : goalScorerName(state.career.clubId);
+}
+
+function goalScorerName(clubId) {
+  const candidates = STAR_PLAYERS.filter((player) => player.clubId === clubId);
+  return candidates.length ? weightedPick(candidates, "scoring").name : `${getClub(clubId).short} atacante`;
+}
+
+function matchWinWeight(clubA, clubB) {
+  const edge = getClub(clubA).rating - getClub(clubB).rating;
+  return 1 / (1 + Math.exp(-edge / 8));
+}
+
+function renderFixtureOverlay(event, rival) {
+  const own = getClub(state.career.clubId);
+  const fixture = event.fixture || { home: own.id, away: rival.id };
+  els.matchOverlay.innerHTML = scoreOverlayMarkup({
+    home: getClub(fixture.home),
+    away: getClub(fixture.away),
+    homeScore: 0,
+    awayScore: 0,
+    clock: "00",
+    homeScorers: [],
+    awayScorers: [],
+    feed: [`${event.copy} Elige simular para activar el reloj.`],
+    controls: false,
+  });
+}
+
+function renderLiveOverlay() {
+  const home = getClub(state.match.homeId);
+  const away = getClub(state.match.awayId);
+  const playerHome = state.match.homeId === state.career.clubId;
+  els.matchOverlay.innerHTML = scoreOverlayMarkup({
+    home,
+    away,
+    homeScore: playerHome ? state.match.scoreFor : state.match.scoreAgainst,
+    awayScore: playerHome ? state.match.scoreAgainst : state.match.scoreFor,
+    clock: formatMinute(state.match.clock),
+    homeScorers: playerHome ? state.match.scorers.for : state.match.scorers.against,
+    awayScorers: playerHome ? state.match.scorers.against : state.match.scorers.for,
+    feed: state.match.feed,
+    controls: true,
+  });
+  els.matchOverlay.querySelectorAll("[data-speed]").forEach((button) => {
+    button.addEventListener("click", () => setMatchSpeed(button.dataset.speed));
+  });
+  startMatchTimer();
+}
+
+function renderClosedOverlay() {
+  const last = allPlayerResults().at(-1);
+  const clubData = getClub(state.career.clubId);
+  const rival = getClub(last?.opponentId || state.career.clubId);
+  els.matchOverlay.innerHTML = scoreOverlayMarkup({
+    home: clubData,
+    away: rival,
+    homeScore: last ? last.score.split("-")[0] : "-",
+    awayScore: last ? last.score.split("-")[1] : "-",
+    clock: "FT",
+    homeScorers: [],
+    awayScorers: [],
+    feed: [state.message],
+    controls: false,
+  });
+}
+
+function scoreOverlayMarkup({ home, away, homeScore, awayScore, clock, homeScorers, awayScorers, feed, controls }) {
+  const clockText = clock === "FT" ? clock : `${clock}'`;
+  return `
+    <div class="score-clock"><span>${clockText}</span><span>${controls ? `${speedLabel(state.match.speed)} | EN VIVO` : "MODO CARRERA"}</span></div>
+    <div class="scoreboard-grid">
+      ${scoreTeamMarkup(home)}
+      <div class="live-score">${homeScore} - ${awayScore}</div>
+      ${scoreTeamMarkup(away)}
+    </div>
+    <div class="scorer-grid">
+      ${scorerMarkup(home.short, homeScorers)}
+      ${scorerMarkup(away.short, awayScorers)}
+    </div>
+    ${controls ? `
+      <div class="speed-controls">
+        ${[[1, "x1 Normal"], [1.5, "x1.5 Rapido"], [4, "x4 Muy rapido"]].map(([value, label]) => `<button class="speed-button${Number(state.match.speed) === value ? " active" : ""}" type="button" data-speed="${value}">${label}</button>`).join("")}
+      </div>
+    ` : ""}
+    <div class="timeline-feed">
+      <strong>Eventos</strong>
+      <ul>${feed.slice(-5).reverse().map((entry) => `<li>${typeof entry === "string" ? entry : `${formatMinute(entry.minute)}' ${entry.text}`}</li>`).join("")}</ul>
+    </div>
+  `;
+}
+
+function scoreTeamMarkup(clubData) {
+  return `<div class="score-team"><span class="team-crest" style="--club-a:${clubData.primary};--club-b:${clubData.secondary}"><span>${clubData.short}</span></span><strong>${clubData.name}</strong></div>`;
+}
+
+function scorerMarkup(short, scorers) {
+  return `
+    <div class="scorer-list">
+      <strong>${short} goleadores</strong>
+      <ul>${scorers.length ? scorers.map((scorer) => `<li>${formatMinute(scorer.minute)}' ${scorer.name}</li>`).join("") : "<li>Sin goles</li>"}</ul>
+    </div>
+  `;
+}
+
+function speedLabel(speed) {
+  if (Number(speed) === 1.5) return "x1.5";
+  if (Number(speed) === 4) return "x4";
+  return "x1";
 }
 
 function finishPlayerMatch() {
+  stopMatchTimer();
   const context = state.match;
   const result = resultCode(context.scoreFor, context.scoreAgainst);
   const stats = context.stats;
@@ -826,7 +1096,6 @@ function finishPlayerMatch() {
   mergeTotals(stats);
   awardGrowth(stats);
   state.match = null;
-  state.career.trainingUsed = false;
   state.message = stats.summary;
   advanceSeasonIfNeeded();
   saveState();
@@ -1096,7 +1365,6 @@ function renderOfferPanel() {
 function acceptOffer(clubId) {
   state.career.season += 1;
   state.career.clubId = clubId;
-  state.career.trainingUsed = false;
   state.world = createWorld(clubId, state.career.season, state.career.lastChampionsQualifiers);
   state.match = null;
   state.offers = null;
@@ -1107,6 +1375,12 @@ function acceptOffer(clubId) {
 
 function renderDossier() {
   els.overallBadge.textContent = `OVR ${getOverall()}`;
+  drawDossierPlayer();
+  els.dossierLook.innerHTML = `
+    <strong>${state.player.name}</strong>
+    <span>${HAIR_STYLES.find((style) => style.id === state.player.hairStyle).label} | Pelo ${state.player.hairColor} | Botas ${state.player.bootColor}</span>
+    <span>${getClub(state.career.clubId).name} viste tu uniforme actual.</span>
+  `;
   els.attributeGrid.innerHTML = "";
   ATTRIBUTES.forEach((attribute) => els.attributeGrid.append(statChip(attribute, state.player.attributes[attribute])));
   const totals = state.career.totals;
@@ -1408,7 +1682,7 @@ function leaderMarkup(leaders) {
 }
 
 function rollMarkup(roll) {
-  return `<div class="dice-log"><span class="dice-chip">d20 ${roll.die}</span>${ATTRIBUTE_LABELS[roll.stat]} ${signed(roll.modifier)} = ${roll.total} contra DC ${roll.dc}: ${roll.success ? "exito" : "fallo"}.</div>`;
+  return `<div class="dice-log"><span class="dice-chip">${formatMinute(roll.minute)}' d20 ${roll.die}</span>${ATTRIBUTE_LABELS[roll.stat]} ${signed(roll.modifier)} = ${roll.total} contra DC ${roll.dc}: ${roll.success ? "exito" : "fallo"}.</div>`;
 }
 
 function emptyRow(clubId) {
@@ -1435,10 +1709,29 @@ function mergeTotals(stats) {
 
 function awardGrowth(stats) {
   state.career.xp += Math.round(stats.rating * 2 + (stats.result === "W" ? 3 : 1));
-  if (stats.rating < 7.2 || Math.random() < 0.45) return;
-  const focus = POSITIONS[state.player.position].focus;
-  const attribute = focus[randomInt(0, focus.length - 1)];
-  state.player.attributes[attribute] = clamp(state.player.attributes[attribute] + 1, 25, 99);
+}
+
+function awardDevelopment(attribute, minute) {
+  const development = state.player.development;
+  development[attribute] += 1;
+  const threshold = developmentThreshold(attribute);
+  if (development[attribute] < threshold || state.player.attributes[attribute] >= 99) return;
+  development[attribute] -= threshold;
+  state.player.attributes[attribute] += 1;
+  const label = `${ATTRIBUTE_LABELS[attribute]} +1`;
+  const copy = `${ATTRIBUTE_LABELS[attribute]} sube a ${state.player.attributes[attribute]} tras superar d20 al ${formatMinute(minute)}'.`;
+  state.career.growthLog.push({ label, copy, season: state.career.season });
+  state.career.growthLog = state.career.growthLog.slice(-24);
+  pushMatchFeed(minute, copy, "growth");
+}
+
+function emptyDevelopment() {
+  return Object.fromEntries(ATTRIBUTES.map((attribute) => [attribute, 0]));
+}
+
+function developmentThreshold(attribute) {
+  const current = state.player.attributes[attribute];
+  return clamp(Math.ceil((current - 30) / 11), 3, 8);
 }
 
 function buildHighlights(positionId, opponentId, type) {
@@ -1473,43 +1766,58 @@ function getOverall() {
 
 function drawPlayerPreview() {
   const ctx = els.playerPreview.getContext("2d");
-  const skin = SKINS.find((candidate) => candidate.id === setup.skin);
   const selectedClub = getClub(setup.starterClub);
-  drawPitch(ctx, 176, 208, 22);
-  pixelRect(ctx, skin.shadow, 64, 28, 48, 42);
-  pixelRect(ctx, skin.color, 68, 24, 40, 42);
-  pixelRect(ctx, "#111827", 72, 36, 6, 6);
-  pixelRect(ctx, "#111827", 98, 36, 6, 6);
-  pixelRect(ctx, selectedClub.primary, 54, 74, 68, 54);
-  pixelRect(ctx, selectedClub.secondary, 54, 74, 68, 8);
-  pixelRect(ctx, selectedClub.secondary, 84, 82, 8, 46);
-  pixelRect(ctx, skin.color, 42, 84, 12, 34);
-  pixelRect(ctx, skin.color, 122, 84, 12, 34);
-  pixelRect(ctx, "#10211a", 62, 128, 20, 38);
-  pixelRect(ctx, "#10211a", 94, 128, 20, 38);
-  pixelRect(ctx, selectedClub.secondary, 58, 166, 28, 10);
-  pixelRect(ctx, selectedClub.secondary, 90, 166, 28, 10);
+  const skin = SKINS.find((candidate) => candidate.id === setup.skin);
   const name = cleanName(els.playerName.value);
-  pixelText(ctx, POSITIONS[setup.position].label.toUpperCase(), 88, 16, "#fff4d2", "center");
-  pixelText(ctx, name, 88, 190, "#fff4d2", "center", name.length > 12 ? 9 : 12);
+  els.previewName.textContent = name;
+  drawAvatar(ctx, {
+    name,
+    position: setup.position,
+    skin,
+    hairStyle: setup.hairStyle,
+    hairColor: setup.hairColor,
+    bootColor: setup.bootColor,
+    primary: selectedClub.primary,
+    secondary: selectedClub.secondary,
+  });
 }
 
-function drawMatchField(highlight, rival) {
-  const ctx = els.matchCanvas.getContext("2d");
-  const width = els.matchCanvas.width;
-  const height = els.matchCanvas.height;
-  drawPitch(ctx, width, height, 52);
-  if (!state) {
-    pixelText(ctx, "FUOL", width / 2, height / 2, "#fff4d2", "center", 30);
-    return;
-  }
-  const own = getClub(state.career.clubId);
-  drawPixelPlayer(ctx, width * 0.34, height * 0.52, own.primary, own.secondary, getSkin().color, true);
-  drawPixelPlayer(ctx, width * 0.52, height * 0.35, own.primary, own.secondary, "#d19a66");
-  drawPixelPlayer(ctx, width * 0.62, height * 0.62, rival?.primary || "#ef4444", rival?.secondary || "#111827", "#f1c27d");
-  drawPixelPlayer(ctx, width * 0.73, height * 0.43, rival?.primary || "#ef4444", rival?.secondary || "#111827", "#8d5524");
-  pixelRect(ctx, "#fff4d2", width * 0.41, height * 0.49, 10, 10);
-  pixelText(ctx, highlight ? highlight.title.toUpperCase() : `${own.short} VS ${rival?.short || "FUOL"}`, width / 2, 38, "#fff4d2", "center", 20);
+function drawDossierPlayer() {
+  const ctx = els.dossierPlayer.getContext("2d");
+  const clubData = getClub(state.career.clubId);
+  drawAvatar(ctx, {
+    name: state.player.name,
+    position: state.player.position,
+    skin: getSkin(),
+    hairStyle: state.player.hairStyle,
+    hairColor: state.player.hairColor,
+    bootColor: state.player.bootColor,
+    primary: clubData.primary,
+    secondary: clubData.secondary,
+  });
+}
+
+function drawAvatar(ctx, look) {
+  drawPitch(ctx, 176, 208, 22);
+  pixelRect(ctx, look.skin.shadow, 64, 28, 48, 42);
+  pixelRect(ctx, look.skin.color, 68, 24, 40, 42);
+  drawHair(ctx, look.hairStyle, look.hairColor);
+  pixelRect(ctx, "#111827", 72, 36, 6, 6);
+  pixelRect(ctx, "#111827", 98, 36, 6, 6);
+  pixelRect(ctx, look.primary, 54, 74, 68, 54);
+  pixelRect(ctx, look.secondary, 54, 74, 68, 8);
+  pixelRect(ctx, look.secondary, 84, 82, 8, 46);
+  pixelRect(ctx, look.skin.color, 42, 84, 12, 34);
+  pixelRect(ctx, look.skin.color, 122, 84, 12, 34);
+  pixelRect(ctx, "#10211a", 62, 128, 20, 38);
+  pixelRect(ctx, "#10211a", 94, 128, 20, 38);
+  pixelRect(ctx, "#f8fafc", 58, 166, 28, 8);
+  pixelRect(ctx, "#f8fafc", 90, 166, 28, 8);
+  pixelRect(ctx, look.bootColor, 58, 174, 28, 8);
+  pixelRect(ctx, look.bootColor, 90, 174, 28, 8);
+  pixelRect(ctx, "#fff4d2", 25, 186, 126, 17);
+  pixelText(ctx, POSITIONS[look.position].label.toUpperCase(), 88, 16, "#fff4d2", "center");
+  pixelText(ctx, look.name, 88, 198, "#07120e", "center", look.name.length > 12 ? 9 : 12);
 }
 
 function drawPitch(ctx, width, height, stripe) {
@@ -1524,15 +1832,25 @@ function drawPitch(ctx, width, height, stripe) {
   }
 }
 
-function drawPixelPlayer(ctx, x, y, kit, trim, skin, focus = false) {
-  const px = Math.round(x);
-  const py = Math.round(y);
-  if (focus) outlineRect(ctx, "#ffd447", px - 20, py - 34, 40, 74, 4);
-  pixelRect(ctx, skin, px - 8, py - 28, 16, 14);
-  pixelRect(ctx, kit, px - 14, py - 12, 28, 28);
-  pixelRect(ctx, trim, px - 14, py - 12, 28, 4);
-  pixelRect(ctx, "#0b1320", px - 11, py + 16, 8, 20);
-  pixelRect(ctx, "#0b1320", px + 3, py + 16, 8, 20);
+function drawHair(ctx, styleId, color) {
+  const hairColor = color || "#111827";
+  const block = (x, y, width, height) => pixelRect(ctx, hairColor, x, y, width, height);
+  block(68, 20, 40, 9);
+  if (styleId === "buzz") block(70, 28, 36, 4);
+  if (styleId === "crop") block(68, 20, 40, 14);
+  if (styleId === "fade") { block(72, 18, 32, 14); block(68, 28, 5, 18); }
+  if (styleId === "side") { block(64, 22, 44, 10); block(68, 32, 20, 5); }
+  if (styleId === "wave") { block(64, 18, 12, 10); block(76, 16, 16, 12); block(92, 19, 18, 11); }
+  if (styleId === "curly") { block(62, 18, 14, 13); block(76, 14, 15, 16); block(91, 17, 17, 14); block(103, 22, 10, 14); }
+  if (styleId === "afro") { block(58, 12, 60, 18); block(62, 6, 52, 12); block(58, 28, 12, 22); block(106, 28, 12, 22); }
+  if (styleId === "mohawk") { block(82, 7, 14, 28); block(76, 14, 26, 10); }
+  if (styleId === "ponytail") { block(66, 19, 44, 14); block(109, 28, 10, 30); }
+  if (styleId === "bun") { block(68, 20, 40, 12); block(82, 4, 15, 16); }
+  if (styleId === "fringe") { block(66, 18, 44, 12); block(68, 30, 16, 10); block(88, 30, 12, 6); }
+  if (styleId === "spikes") { block(64, 14, 8, 18); block(76, 8, 8, 24); block(88, 12, 8, 20); block(100, 6, 8, 26); }
+  if (styleId === "braids") { block(66, 18, 44, 10); block(64, 28, 7, 36); block(76, 28, 6, 20); block(96, 28, 6, 20); block(106, 28, 7, 36); }
+  if (styleId === "locs") { block(62, 16, 52, 14); block(62, 28, 8, 30); block(74, 28, 7, 20); block(96, 28, 7, 22); block(106, 28, 8, 34); }
+  if (styleId === "long") { block(64, 16, 48, 14); block(60, 28, 12, 52); block(104, 28, 12, 52); }
 }
 
 function renderAtlas() {
@@ -1632,10 +1950,12 @@ function getLeague(id) { return LEAGUES.find((candidate) => candidate.id === id)
 function getSkin() { return SKINS.find((candidate) => candidate.id === state.player.skin); }
 
 function resetCareer() {
+  stopMatchTimer();
   localStorage.removeItem(STORAGE_KEY);
   state = null;
   setup = createSetupState();
   els.playerName.value = "Canterano";
+  renderHairStyles();
   renderSkins();
   renderPositions();
   renderSetup();
@@ -1646,7 +1966,13 @@ function normalizeState() {
   state.career.history ||= [];
   state.career.awards ||= [];
   state.career.lastChampionsQualifiers ||= [];
+  state.career.growthLog ||= [];
+  state.player.hairStyle ||= "crop";
+  state.player.hairColor ||= "#111827";
+  state.player.bootColor ||= "#facc15";
+  state.player.development = { ...emptyDevelopment(), ...state.player.development };
   state.player.attributes = { ...POSITIONS[state.player.position].base, ...state.player.attributes };
+  if (state.match && typeof state.match.clock !== "number") state.match = null;
   Object.values(state.world.leagues).forEach((league) => league.playerResults ||= []);
   selectedStatsLeague ||= getClub(state.career.clubId).league;
   selectedTableLeague ||= getClub(state.career.clubId).league;
@@ -1657,6 +1983,7 @@ function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)
 function cleanName(value) { return (value || "Canterano").replace(/[<>]/g, "").trim().slice(0, 18) || "Canterano"; }
 function slug(value) { return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, ""); }
 function signed(value) { return value >= 0 ? `+${value}` : `${value}`; }
+function formatMinute(value) { return String(Math.max(0, Math.floor(Number(value) || 0))).padStart(2, "0"); }
 function uniqueClubs(items) { const seen = new Set(); return items.filter((item) => seen.has(item.id) ? false : (seen.add(item.id), true)); }
 function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
 function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }

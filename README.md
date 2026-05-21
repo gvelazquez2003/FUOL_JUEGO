@@ -22,11 +22,14 @@ npm run test:smoke
 
 ## Incluye
 
-- Creacion de jugador con skin y posicion; el uniforme hereda colores del club.
+- Creacion de jugador con skin, posicion, botas, color de pelo y 15 peinados;
+  el uniforme hereda colores del club.
 - Tres ofertas iniciales de clubes de tabla baja.
 - Temporadas domesticas completas de 38 jornadas o 34 jornadas segun la liga.
-- Partidos con 2 a 5 highlights variados segun rival, tiradas d20,
-  dificultad por estadistica y poder del rival.
+- Partidos automaticos con reloj de 90 minutos, velocidades x1, x1.5 y x4,
+  prorroga europea, marcador en vivo y goles por minuto.
+- Highlights de fondo con tiradas d20, dificultad por estadistica y poder del
+  rival; las tiradas exitosas alimentan mejoras automaticas de atributos.
 - Tablas de liga, panel de estadisticas por temporada y rankings de goleadores
   y asistentes con jugadores reales sembrados para cada gran liga.
 - Champions FUOL desde la segunda temporada para los 32 clubes con mas puntos

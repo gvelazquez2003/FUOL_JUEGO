@@ -20,16 +20,21 @@ test("starts a career and resolves the first match", async ({ page }) => {
   expect([34, 38]).toContain(leagueRounds);
 
   for (let round = 0; round < leagueRounds; round += 1) {
-    await page.getByText("Jugar partido").click();
-    const decisionCount = await page.locator(".action-button small").first().evaluate((node) => {
-      const match = node.closest(".match-panel").querySelector("#matchBadge").textContent.match(/\/(\d+)/);
-      return Number(match[1]);
-    });
-    expect(decisionCount).toBeGreaterThanOrEqual(2);
-    expect(decisionCount).toBeLessThanOrEqual(5);
-    for (let decision = 0; decision < decisionCount; decision += 1) {
-      await page.locator(".action-button").first().click();
+    await page.getByText("Simular partido").click();
+    if (round === 0) {
+      await expect(page.locator("#matchOverlay")).toContainText("EN VIVO");
+      await page.locator('[data-speed="1.5"]').click();
+      await expect(page.locator('[data-speed="1.5"]')).toHaveClass(/active/);
+      await page.locator('[data-speed="4"]').click();
+      await expect(page.locator('[data-speed="4"]')).toHaveClass(/active/);
     }
+    await page.evaluate(() => {
+      setMatchSpeed(4);
+      for (let tick = 0; tick < 40; tick += 1) {
+        if (!document.querySelector('[data-speed]')) break;
+        tickMatchClock();
+      }
+    });
   }
 
   await expect(page.locator("#seasonRoute .route-node.done")).toHaveCount(leagueRounds);
