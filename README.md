@@ -51,6 +51,11 @@ El repositorio incluye `vercel.json` para fijar `public` como Output Directory.
 Si el proyecto ya tiene ajustes manuales en Vercel, vuelve a desplegar despues
 de este commit para que el build genere esa carpeta.
 
+Si Supabase mantiene activa la confirmacion de correo, cada alta debe confirmar
+el email antes de iniciar sesion. En `Authentication > URL Configuration` usa
+la URL de produccion del juego como Site URL para que ese regreso apunte al
+deploy publicado.
+
 ## Incluye
 
 - Creacion de jugador juvenil con edad de 16 a 19 anos, fecha de nacimiento,

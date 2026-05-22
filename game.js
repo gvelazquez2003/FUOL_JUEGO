@@ -476,6 +476,10 @@ function onlineRoom() {
   return window.FUOL_ONLINE_CONFIG?.presenceRoom || "fuol-amigos-en-vivo";
 }
 
+function onlineReturnUrl() {
+  return window.location.protocol === "file:" ? "https://fuol-juego.vercel.app" : window.location.origin;
+}
+
 async function signInOnline(event) {
   event.preventDefault();
   if (!online.client) return;
@@ -493,7 +497,10 @@ async function signUpOnline() {
   const { data, error } = await online.client.auth.signUp({
     email: els.accountEmail.value.trim(),
     password: els.accountPassword.value,
-    options: { data: { display_name: onlineAlias(els.accountDisplayName.value) } },
+    options: {
+      data: { display_name: onlineAlias(els.accountDisplayName.value) },
+      emailRedirectTo: onlineReturnUrl(),
+    },
   });
   if (error) {
     setOnlineMessage(`No se pudo crear la cuenta: ${onlineErrorText(error)}.`);
