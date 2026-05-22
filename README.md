@@ -34,7 +34,8 @@ para la sala de amigos.
 2. Activa Realtime para el proyecto si no viene habilitado.
 3. Para local puedes editar `online-config.js` con la URL y la clave publica del
    proyecto.
-4. Para Vercel configura estas variables de entorno y usa `npm run build`:
+4. Para Vercel configura estas variables de entorno. `npm run build` genera la
+   salida estatica `public` que Vercel publica:
 
 ```text
 FUOL_SUPABASE_URL
@@ -45,6 +46,10 @@ FUOL_PRESENCE_ROOM
 `FUOL_PRESENCE_ROOM` es opcional; por defecto todos entran en
 `fuol-amigos-en-vivo`. La clave usada aqui debe ser la publica/anonima de
 Supabase, nunca una service role key.
+
+El repositorio incluye `vercel.json` para fijar `public` como Output Directory.
+Si el proyecto ya tiene ajustes manuales en Vercel, vuelve a desplegar despues
+de este commit para que el build genere esa carpeta.
 
 ## Incluye
 
