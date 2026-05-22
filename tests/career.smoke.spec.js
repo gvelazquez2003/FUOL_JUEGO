@@ -14,6 +14,15 @@ test("starts a career and resolves the first match", async ({ page }) => {
   await page.evaluate(() => localStorage.clear());
   await page.reload();
 
+  await page.locator("#openAccountButton").click();
+  await expect(page.locator("#accountDialog")).toBeVisible();
+  await expect(page.locator("#onlineStatus")).toContainText("Configura Supabase");
+  await page.locator("#closeAccountButton").click();
+  await page.locator("#openFriendsButton").click();
+  await expect(page.locator("#friendsDialog")).toBeVisible();
+  await expect(page.locator("#friendsLiveBody")).toContainText("modo online");
+  await page.locator("#closeFriendsButton").click();
+
   await page.locator("#startCareerButton").click();
   await expect(page.locator("#careerScreen")).toBeVisible();
   await expect(page.locator("#seasonCalendar")).toContainText("Calendario");

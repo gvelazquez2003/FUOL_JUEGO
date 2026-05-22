@@ -3,6 +3,8 @@
   "version": "2.0.0",
   "private": true,
   "scripts": {
+    "build": "node scripts/build-online-config.mjs",
+    "build:online": "node scripts/build-online-config.mjs",
     "build:squads": "node scripts/build-squad-seeds.mjs",
     "test:smoke": "playwright test tests/career.smoke.spec.js"
   },

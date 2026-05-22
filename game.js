@@ -3,6 +3,7 @@ const MAX_SEASONS = 15;
 const CHAMPIONS_SIZE = 32;
 const PROFILE_DATE = "2026-05-22";
 const CAREER_START_YEAR = 2026;
+const ONLINE_PRESENCE_DELAY = 850;
 
 const LEAGUES = [
   { id: "eng", name: "Inglaterra", competition: "Premier League", rounds: 38 },
@@ -335,6 +336,25 @@ const els = {
   matchHistoryTitle: document.querySelector("#matchHistoryTitle"),
   matchHistoryBody: document.querySelector("#matchHistoryBody"),
   closeHistoryButton: document.querySelector("#closeHistoryButton"),
+  openAccountButton: document.querySelector("#openAccountButton"),
+  closeAccountButton: document.querySelector("#closeAccountButton"),
+  accountDialog: document.querySelector("#accountDialog"),
+  onlineStatus: document.querySelector("#onlineStatus"),
+  accountForm: document.querySelector("#accountForm"),
+  accountDisplayName: document.querySelector("#accountDisplayName"),
+  accountEmail: document.querySelector("#accountEmail"),
+  accountPassword: document.querySelector("#accountPassword"),
+  signupButton: document.querySelector("#signupButton"),
+  accountSession: document.querySelector("#accountSession"),
+  accountIdentity: document.querySelector("#accountIdentity"),
+  accountAlias: document.querySelector("#accountAlias"),
+  saveAliasButton: document.querySelector("#saveAliasButton"),
+  logoutButton: document.querySelector("#logoutButton"),
+  openFriendsButton: document.querySelector("#openFriendsButton"),
+  closeFriendsButton: document.querySelector("#closeFriendsButton"),
+  friendsDialog: document.querySelector("#friendsDialog"),
+  friendsLiveBody: document.querySelector("#friendsLiveBody"),
+  liveFriendCount: document.querySelector("#liveFriendCount"),
   resetButton: document.querySelector("#resetButton"),
 };
 
@@ -347,8 +367,21 @@ let selectedTableLeague = null;
 let selectedSquadClub = null;
 let squadSearch = "";
 let matchTimer = null;
+let onlinePresenceTimer = null;
+let lastPresenceSentAt = 0;
+const online = {
+  client: null,
+  channel: null,
+  enabled: false,
+  message: "",
+  presenceReady: false,
+  session: null,
+  friends: [],
+  clientId: window.crypto?.randomUUID?.() || `fuol-${Date.now()}-${Math.floor(Math.random() * 100000)}`,
+};
 
 boot();
+initOnline().catch((error) => setOnlineMessage(`No se pudo iniciar el vestuario online: ${onlineErrorText(error)}.`));
 
 function club(id, name, short, league, rating, tier, primary, secondary) {
   return { id, name, short, league, rating, tier, primary, secondary };
@@ -401,7 +434,328 @@ function bindEvents() {
   els.closeAtlasButton.addEventListener("click", () => els.clubAtlas.close());
   els.closeAwardButton.addEventListener("click", () => els.awardDialog.close());
   els.closeHistoryButton.addEventListener("click", () => els.matchHistoryDialog.close());
+  els.openAccountButton.addEventListener("click", () => els.accountDialog.showModal());
+  els.closeAccountButton.addEventListener("click", () => els.accountDialog.close());
+  els.openFriendsButton.addEventListener("click", () => els.friendsDialog.showModal());
+  els.closeFriendsButton.addEventListener("click", () => els.friendsDialog.close());
+  els.accountForm.addEventListener("submit", signInOnline);
+  els.signupButton.addEventListener("click", signUpOnline);
+  els.saveAliasButton.addEventListener("click", saveOnlineAlias);
+  els.logoutButton.addEventListener("click", signOutOnline);
   els.resetButton.addEventListener("click", resetCareer);
+}
+
+async function initOnline() {
+  renderOnlineUi();
+  if (!onlineConfigReady()) {
+    setOnlineMessage("Configura Supabase para crear cuentas y ver las partidas online de tus amigos.");
+    return;
+  }
+  if (!window.supabase?.createClient) {
+    setOnlineMessage("La libreria online no cargo. La carrera local sigue disponible.");
+    return;
+  }
+
+  const config = window.FUOL_ONLINE_CONFIG;
+  online.enabled = true;
+  online.client = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, {
+    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
+  });
+  online.client.auth.onAuthStateChange((_event, session) => syncOnlineSession(session));
+  const { data, error } = await online.client.auth.getSession();
+  if (error) throw error;
+  await syncOnlineSession(data.session);
+}
+
+function onlineConfigReady() {
+  const config = window.FUOL_ONLINE_CONFIG || {};
+  return Boolean(config.supabaseUrl && config.supabaseAnonKey);
+}
+
+function onlineRoom() {
+  return window.FUOL_ONLINE_CONFIG?.presenceRoom || "fuol-amigos-en-vivo";
+}
+
+async function signInOnline(event) {
+  event.preventDefault();
+  if (!online.client) return;
+  setOnlineMessage("Entrando al vestuario online...");
+  const { error } = await online.client.auth.signInWithPassword({
+    email: els.accountEmail.value.trim(),
+    password: els.accountPassword.value,
+  });
+  if (error) setOnlineMessage(`No se pudo iniciar sesion: ${onlineErrorText(error)}.`);
+}
+
+async function signUpOnline() {
+  if (!online.client || !els.accountForm.reportValidity()) return;
+  setOnlineMessage("Creando cuenta...");
+  const { data, error } = await online.client.auth.signUp({
+    email: els.accountEmail.value.trim(),
+    password: els.accountPassword.value,
+    options: { data: { display_name: onlineAlias(els.accountDisplayName.value) } },
+  });
+  if (error) {
+    setOnlineMessage(`No se pudo crear la cuenta: ${onlineErrorText(error)}.`);
+    return;
+  }
+  if (!data.session) {
+    setOnlineMessage("Cuenta creada. Confirma el correo si tu proyecto Supabase lo exige y luego inicia sesion.");
+  }
+}
+
+async function saveOnlineAlias() {
+  if (!online.client || !online.session) return;
+  const displayName = onlineAlias(els.accountAlias.value);
+  const { data, error } = await online.client.auth.updateUser({ data: { display_name: displayName } });
+  if (error) {
+    setOnlineMessage(`No se pudo guardar el apodo: ${onlineErrorText(error)}.`);
+    return;
+  }
+  online.session.user = data.user;
+  setOnlineMessage(`${displayName} ya es tu apodo visible en vivo.`);
+  schedulePresenceUpdate(true);
+}
+
+async function signOutOnline() {
+  if (!online.client) return;
+  const { error } = await online.client.auth.signOut();
+  if (error) {
+    setOnlineMessage(`No se pudo cerrar sesion: ${onlineErrorText(error)}.`);
+    return;
+  }
+  await syncOnlineSession(null);
+}
+
+async function syncOnlineSession(session) {
+  const previousUserId = online.session?.user?.id;
+  online.session = session || null;
+  renderOnlineUi();
+  if (!online.session) {
+    disconnectOnlinePresence();
+    if (online.enabled) setOnlineMessage("Inicia sesion para aparecer en vivo y mirar a tus amigos conectados.");
+    return;
+  }
+  if (previousUserId !== online.session.user.id || !online.channel) {
+    setOnlineMessage(`Cuenta lista. La sala ${onlineRoom()} escucha tus partidos en vivo.`);
+    await connectOnlinePresence();
+  }
+  schedulePresenceUpdate(true);
+}
+
+async function connectOnlinePresence() {
+  disconnectOnlinePresence();
+  if (!online.client || !online.session) return;
+  online.channel = online.client.channel(onlineRoom(), {
+    config: { presence: { key: online.session.user.id } },
+  });
+  online.channel.on("presence", { event: "sync" }, syncFriendsFromPresence);
+  online.channel.subscribe(async (status) => {
+    online.presenceReady = status === "SUBSCRIBED";
+    if (online.presenceReady) {
+      setOnlineMessage(`Conectado como ${onlineDisplayName()}. Tus amigos ven el marcador cuando simulas.`);
+      await publishPresenceSnapshot();
+      return;
+    }
+    if (["CHANNEL_ERROR", "TIMED_OUT"].includes(status)) {
+      setOnlineMessage("La sala en vivo no pudo conectar. La cuenta sigue iniciada.");
+    }
+  });
+}
+
+function disconnectOnlinePresence() {
+  if (onlinePresenceTimer) window.clearTimeout(onlinePresenceTimer);
+  onlinePresenceTimer = null;
+  lastPresenceSentAt = 0;
+  online.presenceReady = false;
+  if (online.channel) {
+    online.channel.untrack();
+    online.client?.removeChannel(online.channel);
+    online.channel = null;
+  }
+  online.friends = [];
+  renderFriendsLive();
+}
+
+function syncFriendsFromPresence() {
+  if (!online.channel) return;
+  const latest = new Map();
+  Object.values(online.channel.presenceState()).flat().forEach((snapshot) => {
+    if (!snapshot?.userId || snapshot.userId === online.session?.user?.id) return;
+    const previous = latest.get(snapshot.userId);
+    if (!previous || presenceTime(snapshot) >= presenceTime(previous)) latest.set(snapshot.userId, snapshot);
+  });
+  online.friends = [...latest.values()].sort((left, right) => {
+    return Number(Boolean(right.match)) - Number(Boolean(left.match)) || presenceTime(right) - presenceTime(left);
+  });
+  renderFriendsLive();
+}
+
+function schedulePresenceUpdate(immediate = false) {
+  if (!online.presenceReady || !online.channel || !online.session) return;
+  if (onlinePresenceTimer) window.clearTimeout(onlinePresenceTimer);
+  const elapsed = Date.now() - lastPresenceSentAt;
+  const wait = immediate ? 0 : Math.max(0, ONLINE_PRESENCE_DELAY - elapsed);
+  onlinePresenceTimer = window.setTimeout(publishPresenceSnapshot, wait);
+}
+
+async function publishPresenceSnapshot() {
+  onlinePresenceTimer = null;
+  if (!online.presenceReady || !online.channel || !online.session) return;
+  lastPresenceSentAt = Date.now();
+  const status = await online.channel.track(presenceSnapshot());
+  if (status !== "ok") setOnlineMessage("No se pudo actualizar la partida en vivo.");
+}
+
+function presenceSnapshot() {
+  const clubId = state?.career?.clubId;
+  return {
+    userId: online.session.user.id,
+    clientId: online.clientId,
+    displayName: onlineDisplayName(),
+    updatedAt: new Date().toISOString(),
+    player: state ? {
+      name: state.player.name,
+      season: state.career.season,
+      position: POSITIONS[state.player.position].label,
+      clubId,
+      overall: getOverall(),
+      calendarDate: formatDateLabel(calendarDate()),
+    } : null,
+    match: state?.match ? liveMatchSnapshot() : null,
+  };
+}
+
+function liveMatchSnapshot() {
+  const match = state.match;
+  const playerHome = match.homeId === state.career.clubId;
+  return {
+    type: match.type,
+    minute: formatMinute(match.clock),
+    targetMinutes: match.targetMinutes,
+    speed: speedLabel(match.speed),
+    homeId: match.homeId,
+    awayId: match.awayId,
+    homeScore: playerHome ? match.scoreFor : match.scoreAgainst,
+    awayScore: playerHome ? match.scoreAgainst : match.scoreFor,
+    homeScorers: structuredClone(playerHome ? match.scorers.for.slice(-4) : match.scorers.against.slice(-4)),
+    awayScorers: structuredClone(playerHome ? match.scorers.against.slice(-4) : match.scorers.for.slice(-4)),
+    feed: match.feed.slice(-4).map((entry) => ({ minute: entry.minute, text: entry.text })),
+  };
+}
+
+function renderOnlineUi() {
+  const signedIn = Boolean(online.session);
+  els.accountForm.classList.toggle("hidden", signedIn);
+  els.accountSession.classList.toggle("hidden", !signedIn);
+  [els.accountDisplayName, els.accountEmail, els.accountPassword, els.signupButton].forEach((control) => {
+    control.disabled = !online.enabled;
+  });
+  els.accountForm.querySelector("[type='submit']").disabled = !online.enabled;
+  els.saveAliasButton.disabled = !online.enabled;
+  els.logoutButton.disabled = !online.enabled;
+  if (signedIn) {
+    els.accountIdentity.textContent = `${onlineDisplayName()} | ${online.session.user.email}`;
+    if (document.activeElement !== els.accountAlias) els.accountAlias.value = onlineDisplayName();
+  }
+  els.onlineStatus.textContent = online.message || "Tu cuenta publica solo el resumen en vivo de la carrera.";
+  renderFriendsLive();
+}
+
+function renderFriendsLive() {
+  els.liveFriendCount.textContent = String(online.friends.length);
+  if (!online.enabled) {
+    els.friendsLiveBody.innerHTML = "<p class=\"online-empty\">El modo online esta listo para activarse cuando cargues la URL y la clave publica de Supabase.</p>";
+    return;
+  }
+  if (!online.session) {
+    els.friendsLiveBody.innerHTML = "<p class=\"online-empty\">Inicia sesion para entrar a la sala de amigos y ver sus carreras en vivo.</p>";
+    return;
+  }
+  if (!online.friends.length) {
+    els.friendsLiveBody.innerHTML = `<p class="online-empty">No hay amigos conectados en ${escapeHtml(onlineRoom())}. Comparte esa sala y abre un partido para que aparezca el marcador.</p>`;
+    return;
+  }
+  els.friendsLiveBody.innerHTML = online.friends.map(friendPresenceMarkup).join("");
+}
+
+function friendPresenceMarkup(friend) {
+  const player = friend.player;
+  const status = friend.match ? `${friend.match.minute}' ${escapeHtml(friend.match.speed || "x1")}` : "En linea";
+  return `
+    <article class="friend-card">
+      <div class="friend-head">
+        <div>
+          <span class="hud-label">${escapeHtml(friend.displayName || "Amigo")}</span>
+          <strong>${escapeHtml(player?.name || "Sin carrera creada")}</strong>
+        </div>
+        <span class="tag">${escapeHtml(status)}</span>
+      </div>
+      ${friend.match ? friendMatchMarkup(friend.match) : friendCareerMarkup(player)}
+    </article>
+  `;
+}
+
+function friendMatchMarkup(match) {
+  const home = getClub(match.homeId);
+  const away = getClub(match.awayId);
+  const feed = Array.isArray(match.feed) ? match.feed : [];
+  return `
+    <div class="friend-score">
+      <span>${escapeHtml(home?.name || "Local")}</span>
+      <strong>${Number(match.homeScore) || 0} - ${Number(match.awayScore) || 0}</strong>
+      <span>${escapeHtml(away?.name || "Visitante")}</span>
+    </div>
+    <div class="scorer-grid">
+      ${friendScorersMarkup(home?.short || "LOC", match.homeScorers)}
+      ${friendScorersMarkup(away?.short || "VIS", match.awayScorers)}
+    </div>
+    <ul class="friend-feed">
+      ${feed.length ? feed.slice().reverse().map((entry) => `<li>${formatMinute(entry.minute)}' ${escapeHtml(entry.text)}</li>`).join("") : "<li>El reloj acaba de arrancar.</li>"}
+    </ul>
+  `;
+}
+
+function friendScorersMarkup(short, scorers = []) {
+  const items = Array.isArray(scorers) ? scorers : [];
+  return `
+    <div class="scorer-list">
+      <strong>${escapeHtml(short)} goleadores</strong>
+      <ul>${items.length ? items.map((scorer) => `<li>${formatMinute(scorer.minute)}' ${escapeHtml(scorer.name)}</li>`).join("") : "<li>Sin goles</li>"}</ul>
+    </div>
+  `;
+}
+
+function friendCareerMarkup(player) {
+  const clubData = getClub(player?.clubId);
+  return `
+    <div class="friend-career">
+      <strong>${escapeHtml(clubData?.name || "Carrera por firmar")}</strong>
+      <span>${player ? `Temporada ${Number(player.season) || 1} | ${escapeHtml(player.position)} | OVR ${Number(player.overall) || "-"}` : "Todavia esta creando su jugador."}</span>
+      ${player?.calendarDate ? `<small>Calendario ${escapeHtml(player.calendarDate)}</small>` : ""}
+    </div>
+  `;
+}
+
+function onlineDisplayName() {
+  return onlineAlias(online.session?.user?.user_metadata?.display_name || online.session?.user?.email?.split("@")[0] || "Canterano");
+}
+
+function onlineAlias(value) {
+  return cleanName(value || "Canterano");
+}
+
+function onlineErrorText(error) {
+  return error?.message || "error desconocido";
+}
+
+function setOnlineMessage(copy) {
+  online.message = copy;
+  renderOnlineUi();
+}
+
+function presenceTime(snapshot) {
+  return Date.parse(snapshot?.updatedAt || "") || 0;
 }
 
 function createSetupState() {
@@ -2679,6 +3033,7 @@ function resetCareer() {
   renderSkins();
   renderPositions();
   renderSetup();
+  schedulePresenceUpdate(true);
 }
 
 function normalizeState() {
@@ -2741,7 +3096,7 @@ function squadSeedById(playerId) {
   return Object.values(window.SQUAD_SEEDS || {}).flat().find((player) => player.id === playerId);
 }
 
-function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); schedulePresenceUpdate(); }
 function loadState() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (error) { return null; } }
 function utcDate(year, month, day) { return new Date(Date.UTC(year, month, day)); }
 function dateFromKey(key) { const [year, month, day] = String(key).split("-").map(Number); return utcDate(year, month - 1, day); }

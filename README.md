@@ -11,7 +11,10 @@ Abre `index.html` en el navegador o sirve la carpeta con un servidor estatico:
 npx serve .
 ```
 
-El progreso de la carrera se guarda en `localStorage` del navegador.
+El progreso de la carrera se guarda en `localStorage` del navegador. Las cuentas
+online son opcionales: con Supabase configurado cada usuario puede iniciar
+sesion y entrar a la sala de presencia para mirar partidos de amigos conectados
+en tiempo real.
 
 Chequeo rapido de navegador:
 
@@ -19,6 +22,29 @@ Chequeo rapido de navegador:
 npm install
 npm run test:smoke
 ```
+
+## Cuentas y amigos en vivo
+
+La primera capa online usa Supabase Auth con correo/contrasena y Realtime
+Presence. No copia todo el guardado al servidor: publica un resumen de la
+carrera y, durante un partido, minuto, marcador, goleadores y narracion reciente
+para la sala de amigos.
+
+1. Crea un proyecto Supabase y habilita cuentas por correo en Auth.
+2. Activa Realtime para el proyecto si no viene habilitado.
+3. Para local puedes editar `online-config.js` con la URL y la clave publica del
+   proyecto.
+4. Para Vercel configura estas variables de entorno y usa `npm run build`:
+
+```text
+FUOL_SUPABASE_URL
+FUOL_SUPABASE_ANON_KEY
+FUOL_PRESENCE_ROOM
+```
+
+`FUOL_PRESENCE_ROOM` es opcional; por defecto todos entran en
+`fuol-amigos-en-vivo`. La clave usada aqui debe ser la publica/anonima de
+Supabase, nunca una service role key.
 
 ## Incluye
 
@@ -41,6 +67,8 @@ npm run test:smoke
   nivel, estadisticas, tabla local y Champions.
 - Mercado de verano en diez intervalos con fichajes simulados, propuestas
   progresivas, progreso de atributos, reputacion e historial.
+- Cuentas opcionales y panel `Amigos` para seguir marcadores en vivo de usuarios
+  conectados en la misma sala online.
 - Carrera con un maximo de 15 temporadas.
 - Catalogo completo de clubes de primera division de Inglaterra, Espana,
   Alemania, Italia y Francia para la temporada usada por esta version.

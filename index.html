@@ -19,6 +19,12 @@
           <h1>Carrera Pixel</h1>
         </div>
         <div class="header-actions">
+          <button id="openAccountButton" class="pixel-button compact" type="button">
+            Cuenta
+          </button>
+          <button id="openFriendsButton" class="pixel-button compact live-button" type="button">
+            Amigos <span id="liveFriendCount" class="button-count">0</span>
+          </button>
           <button id="openAtlasButton" class="pixel-button compact" type="button">
             Clubes
           </button>
@@ -234,6 +240,79 @@
       </div>
     </dialog>
 
+    <dialog id="accountDialog" class="online-dialog">
+      <div class="online-shell">
+        <div class="panel-heading atlas-heading">
+          <div>
+            <p class="eyebrow">Vestuario online</p>
+            <h2>Cuenta FUOL</h2>
+          </div>
+          <button id="closeAccountButton" class="pixel-button compact" type="button">
+            Cerrar
+          </button>
+        </div>
+
+        <p id="onlineStatus" class="online-status" aria-live="polite"></p>
+
+        <form id="accountForm" class="account-form">
+          <label>
+            Apodo
+            <input id="accountDisplayName" class="pixel-input" maxlength="18" autocomplete="nickname" value="Canterano" />
+          </label>
+          <label>
+            Correo
+            <input id="accountEmail" class="pixel-input" type="email" autocomplete="email" required />
+          </label>
+          <label>
+            Contrasena
+            <input id="accountPassword" class="pixel-input" type="password" minlength="6" autocomplete="current-password" required />
+          </label>
+          <div class="account-actions">
+            <button id="loginButton" class="pixel-button primary" type="submit">
+              Entrar
+            </button>
+            <button id="signupButton" class="pixel-button" type="button">
+              Crear cuenta
+            </button>
+          </div>
+        </form>
+
+        <section id="accountSession" class="account-session hidden">
+          <div>
+            <span class="hud-label">Sesion</span>
+            <strong id="accountIdentity"></strong>
+          </div>
+          <label>
+            Apodo visible
+            <input id="accountAlias" class="pixel-input" maxlength="18" autocomplete="nickname" />
+          </label>
+          <div class="account-actions">
+            <button id="saveAliasButton" class="pixel-button primary" type="button">
+              Guardar apodo
+            </button>
+            <button id="logoutButton" class="pixel-button danger" type="button">
+              Salir
+            </button>
+          </div>
+        </section>
+      </div>
+    </dialog>
+
+    <dialog id="friendsDialog" class="online-dialog">
+      <div class="online-shell">
+        <div class="panel-heading atlas-heading">
+          <div>
+            <p class="eyebrow">Tribuna</p>
+            <h2>Amigos en vivo</h2>
+          </div>
+          <button id="closeFriendsButton" class="pixel-button compact" type="button">
+            Cerrar
+          </button>
+        </div>
+        <div id="friendsLiveBody" class="friends-live"></div>
+      </div>
+    </dialog>
+
     <template id="clubCardTemplate">
       <button class="club-card" type="button">
         <span class="club-pixels"></span>
@@ -242,6 +321,8 @@
       </button>
     </template>
 
+    <script src="online-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="squad-seeds.js"></script>
     <script src="trivia.js"></script>
     <script src="game.js"></script>
