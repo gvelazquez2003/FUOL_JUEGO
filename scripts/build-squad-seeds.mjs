@@ -34,9 +34,9 @@ const squads = {};
 clubs.forEach((club) => {
   const players = byClub[aliases[club.id] || normalize(club.name)] || [];
   if (!players.length) throw new Error(`Falta club ${club.id}: ${club.name}.`);
-  squads[club.id] = selectXI(players).map((player) => ({
+  squads[club.id] = selectRoster(players).map((player) => ({
     id: `fc26-${player.player_id}`,
-    name: playerName(player.long_name || player.short_name),
+    name: playerName(player.short_name || player.long_name),
     pos: compactPosition(player.club_position || player.player_positions),
     positions: player.player_positions,
     age: number(player.age),
@@ -56,15 +56,19 @@ writeFileSync(new URL("../squad-seeds.js", import.meta.url), [
   "",
 ].join("\n"));
 
-function selectXI(players) {
+function selectRoster(players) {
   const pool = players.filter((player) => player.overall).sort((left, right) => number(right.overall) - number(left.overall));
   const picked = [];
   pickGroup(pool, picked, (player) => has(player, ["GK"]), 1);
   pickGroup(pool, picked, (player) => has(player, ["CB", "LB", "RB", "LWB", "RWB"]), 5);
   pickGroup(pool, picked, (player) => has(player, ["CDM", "CM", "CAM", "LM", "RM"]), 8);
   pickGroup(pool, picked, (player) => has(player, ["LW", "RW", "CF", "ST"]), 11);
-  pickGroup(pool, picked, () => true, 11);
-  return picked.slice(0, 11);
+  pickGroup(pool, picked, (player) => has(player, ["GK"]), 12);
+  pickGroup(pool, picked, (player) => has(player, ["CB", "LB", "RB", "LWB", "RWB"]), 14);
+  pickGroup(pool, picked, (player) => has(player, ["CDM", "CM", "CAM", "LM", "RM"]), 16);
+  pickGroup(pool, picked, (player) => has(player, ["LW", "RW", "CF", "ST"]), 17);
+  pickGroup(pool, picked, () => true, 17);
+  return picked.slice(0, 17);
 }
 
 function pickGroup(pool, picked, predicate, limit) {

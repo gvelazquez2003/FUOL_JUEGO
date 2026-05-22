@@ -22,19 +22,23 @@ npm run test:smoke
 
 ## Incluye
 
-- Creacion de jugador con skin, posicion, botas, color de pelo y 15 peinados;
-  el uniforme hereda colores del club.
+- Creacion de jugador juvenil con edad de 16 a 19 anos, fecha de nacimiento,
+  skin, posicion, botas, color de pelo y 15 peinados; el uniforme hereda
+  colores del club.
 - Tres ofertas iniciales de clubes de tabla baja.
 - Temporadas domesticas completas de 38 jornadas o 34 jornadas segun la liga.
+- Calendario diario para llegar a cada jornada y de 5 a 15 entrenamientos
+  trivia por temporada con un banco de 200 preguntas.
 - Partidos automaticos con reloj de 90 minutos, velocidades x1, x1.5 y x4,
-  prorroga europea, marcador en vivo, narracion e historial por partido.
+  prorroga europea, cambios simulados, marcador en vivo, narracion e historial.
 - Highlights de fondo con tiradas d20, dificultad por estadistica y poder del
   rival; las tiradas exitosas alimentan mejoras automaticas de atributos.
 - Tablas de liga, panel de estadisticas por temporada, rankings de goleadores
-  y asistentes y buscador de plantillas con XI reales por cada club.
+  y asistentes y buscador de plantillas con 17 jugadores FC26 por cada club.
 - Champions FUOL desde la segunda temporada para los 32 clubes con mas puntos
   domesticos del ano anterior.
-- Gala anual del Balon de Oro con top 10, top 3 y ganador.
+- Gala anual del Balon de Oro con top 10, top 3 y filtros de candidatura por
+  nivel, estadisticas, tabla local y Champions.
 - Mercado de verano en diez intervalos con fichajes simulados, propuestas
   progresivas, progreso de atributos, reputacion e historial.
 - Carrera con un maximo de 15 temporadas.

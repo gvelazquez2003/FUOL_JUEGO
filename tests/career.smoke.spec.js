@@ -6,6 +6,7 @@ test.use({
 });
 
 test("starts a career and resolves the first match", async ({ page }) => {
+  test.setTimeout(120000);
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
 
@@ -15,11 +16,25 @@ test("starts a career and resolves the first match", async ({ page }) => {
 
   await page.locator("#startCareerButton").click();
   await expect(page.locator("#careerScreen")).toBeVisible();
+  await expect(page.locator("#seasonCalendar")).toContainText("Calendario");
+  await expect.poll(() => page.evaluate(() => window.TRIVIA_QUESTIONS.length)).toBe(200);
   const leagueRounds = await page.locator("#seasonRoute .route-node").count();
 
   expect([34, 38]).toContain(leagueRounds);
 
   for (let round = 0; round < leagueRounds; round += 1) {
+    await page.evaluate(() => {
+      for (let day = 0; day < 420 && !document.querySelector("#offerPanel:not(.hidden)"); day += 1) {
+        if ([...document.querySelectorAll("button")].some((button) => button.textContent.includes("Simular partido"))) break;
+        const training = currentEvent();
+        if (training.type === "training") {
+          const question = trainingQuestion(training.calendarId);
+          answerTraining(training.calendarId, question.options.indexOf(question.answer));
+          continue;
+        }
+        advanceCalendarDay();
+      }
+    });
     await page.getByText("Simular partido").click();
     if (round === 0) {
       await expect(page.locator("#matchOverlay")).toContainText("EN VIVO");
@@ -48,6 +63,7 @@ test("starts a career and resolves the first match", async ({ page }) => {
 
   await expect(page.locator("#seasonRoute .route-node.done")).toHaveCount(leagueRounds);
   await expect(page.locator("#awardDialog")).toBeVisible();
+  await expect(page.locator("#awardDialog .player-row")).toHaveCount(0);
   await expect(page.locator("#offerPanel")).toBeVisible();
   await page.locator("#closeAwardButton").click();
   await page.getByText("Adelantar intervalo").click();

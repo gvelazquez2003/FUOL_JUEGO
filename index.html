@@ -54,6 +54,18 @@
               autocomplete="off"
             />
 
+            <div class="identity-grid">
+              <label>
+                Edad
+                <input id="playerAge" class="pixel-input" type="number" min="16" max="19" value="17" />
+              </label>
+              <label>
+                Fecha nacimiento
+                <input id="playerBirthDate" class="pixel-input" type="date" value="2009-01-15" />
+              </label>
+            </div>
+            <p id="setupError" class="setup-error" aria-live="polite"></p>
+
             <fieldset>
               <legend>Skin</legend>
               <div id="skinChoices" class="swatch-row skin-row"></div>
@@ -121,6 +133,7 @@
               <h2 id="seasonTitle">Temporada</h2>
               <span id="seasonStatus" class="tag">En curso</span>
             </div>
+            <div id="seasonCalendar" class="season-calendar"></div>
             <div id="seasonRoute" class="season-route"></div>
             <div id="growthDock" class="growth-dock"></div>
           </section>
@@ -230,6 +243,7 @@
     </template>
 
     <script src="squad-seeds.js"></script>
+    <script src="trivia.js"></script>
     <script src="game.js"></script>
   </body>
 </html>
