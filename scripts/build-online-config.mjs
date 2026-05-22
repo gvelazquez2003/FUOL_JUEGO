@@ -1,4 +1,4 @@
-import { copyFileSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, cpSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 
 const config = {
   supabaseUrl: process.env.FUOL_SUPABASE_URL || "",
@@ -18,5 +18,6 @@ const configSource = `window.FUOL_ONLINE_CONFIG = window.FUOL_ONLINE_CONFIG || $
 rmSync(outputDirectory, { force: true, recursive: true });
 mkdirSync(outputDirectory);
 staticFiles.forEach((file) => copyFileSync(file, `${outputDirectory}/${file}`));
+cpSync("assets", `${outputDirectory}/assets`, { recursive: true });
 writeFileSync("online-config.js", configSource);
 writeFileSync(`${outputDirectory}/online-config.js`, configSource);
